@@ -9,7 +9,8 @@ import pandas_datareader.data as pdr
 
 from p1_get_financial_data import get_pricedata_yfinance
 
-style.use('ggplot')
+#style.use('ggplot')
+style.use('fivethirtyeight')
 
 '''
 Variablen:
@@ -28,7 +29,7 @@ def ohlc_candlestick(symbol: str, startdate: str, enddate: dt.datetime):
     For the future use the function "ohlc_candlestick_update" which uses the newer and maintained
     mplfinance-Package
 
-    We need proper OHLC-Data. Be aware of splits then we can't use close though. We resample a 10D-average,
+    We need proper OHLC-Data. Be aware of splits then we can't use 'close' though. We resample a 10D-average,
     for that we can see the candles better. We normalize data. We also normalize the Volume, since it would be
     too granular otherwise.
     Different from the tutorial we won't need to reset the index, since yfinance already results a proper df.
