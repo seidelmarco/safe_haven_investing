@@ -137,6 +137,8 @@ def extract_featuresets(ticker):
     # print(df['{}_target'.format(ticker)])
     vals = df['{}_target'.format(ticker)].values.tolist()
     str_vals = [str(i) for i in vals]
+    print('')
+    print('Results for: ', ticker)
     print('Data spread:', Counter(str_vals))
 
     df.fillna(0, inplace=True)

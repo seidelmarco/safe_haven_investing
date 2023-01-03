@@ -84,7 +84,6 @@ def do_ml(ticker, use_knn=False):
     predictions = clf.predict(X_test)
     print('predicted class counts:', Counter(predictions))
     print()
-    print()
     return confidence   # das hatte ich zuerst vergessen - wenn nichts returned wird, kann man die Funktion zwar
                         # aufrufen, in einer assigneden Variable wird aber nichts gespeichert
 
@@ -115,4 +114,5 @@ for count, ticker in enumerate(tqdm(tickers)):
     accuracies.append(accuracy)
 
     print("{} accuracy: {}. ".format(ticker, accuracy))
+    print('')
 print('Average accuracy: ', mean(accuracies))

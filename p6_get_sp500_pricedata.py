@@ -21,6 +21,7 @@ yf.pdr_override()
 def get_yahoo_pricedata(reload_sp500=False):
     '''
     Notes:
+        - use this script for getting and saving every ticker symbol ohlc data to its own csv-file
         - for that things won't get messy, we will create a directory for the pricedata with os
         - Yahoo Traceback still on 29th Dec 2022
         -     data = j["context"]["dispatcher"]["stores"]["HistoricalPriceStore"]
@@ -29,7 +30,7 @@ def get_yahoo_pricedata(reload_sp500=False):
         - use yfinance instead
     :param reload_sp500: False, since we already have a sp500tickers object on disc; if we want to reload from
     Wikipedia, then we call the function with the param True
-    :return:
+    :return: df
     '''
     if reload_sp500 is True:
         tickers = save_sp500_tickers()
