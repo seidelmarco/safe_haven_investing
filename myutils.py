@@ -10,6 +10,28 @@ def timestamp():
     dt_string = now.strftime('%d/%m/%Y %H:%M:%S')
     print('Date and Time = ', dt_string)
 
+    return dt_string
+
+
+def timestamp_onlyday():
+    now = datetime.now()
+    d_string = now.strftime('%Y-%m-%d')
+    print('Date = ', d_string)
+
+    return d_string
+
+
+def back_to_the_future():
+    backone = datetime.today() - timedelta(days=1)
+    backone_string = backone.strftime('%Y-%m-%d')
+    print('Yesterday = ', backone)
+
+    return backone_string
+
+
+timestamp_onlyday()
+back_to_the_future()
+
 
 def talk_to_me():
     '''
