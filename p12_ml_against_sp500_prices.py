@@ -92,8 +92,11 @@ do_ml('XOM', use_knn=False)
 do_ml('AAPL', use_knn=False)
 do_ml('DE', use_knn=False)
 
-
+'''
+Das in Funktion wrappen, dass es nicht immer komplett durchläuft ...
+'''
 # let's run it against all tickers from sp500:
+# Todo : in Funktion packen
 with open('sp500tickers.pickle', 'rb') as f:
     tickers = pickle.load(f)
 

@@ -1,6 +1,6 @@
 import os
 from connect import connect
-from myutils import sqlengine, talk_to_me, timestamp, timestamp_onlyday, back_to_the_future
+from myutils import sqlengine, sqlengine_pull_from_db, talk_to_me, timestamp, timestamp_onlyday, back_to_the_future
 import pickle
 
 import datetime as dt
@@ -169,7 +169,8 @@ def get_yahoo_ohlc_selection():
     :param enddate:
     :return: main_df
     '''
-    tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY', 'BAS.DE', 'MUV2.DE']
+    tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY', 'BAS.DE', 'MUV2.DE', 'BLDP', 'KO', 'DLTR',
+               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'NEL.OL', 'OGN', 'SKT', 'TDG', 'GC=F']
     print(tickers)
 
     if not os.path.exists('sp500_dfs'):
@@ -238,14 +239,20 @@ def push_df_to_db(df, tablename: str):
 
     engine = sqlengine()
 
-    df.to_sql(tablename, con=engine, if_exists='append', chunksize=100)
+    df.to_sql(tablename, con=engine, if_exists='replace', chunksize=100)
 
 
 def pull_df_from_db():
     connect()
-    engine = sqlengine()
-    sql = ''
-    df = pd.read_sql(sql, con=engine)
+    engine = sqlengine_pull_from_db()
+    sql = 'selection_ohlc'
+
+    # an extra integer-index-column is added
+    # df = pd.read_sql(sql, con=engine)
+    # Column 'Date' is used as index
+    df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], columns=['CMCL_Adj_Close',
+                                                                                       'MTNOY_Adj_Close',
+                                                                                       'GC=F_Adj_Close'])
     return df
 
 
@@ -258,9 +265,12 @@ def pull_df_from_db():
 # sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
 # print(sp500_only1day)
 
-# push_df_to_db(sp500_only1day, tablename='sp500_ohlc')
+# push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 
 selection = get_yahoo_ohlc_selection()
 print(selection)
 
 push_df_to_db(selection, tablename='selection_ohlc')
+
+df = pull_df_from_db()
+print(df)

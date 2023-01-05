@@ -16,6 +16,9 @@ from p6_get_sp500_pricedata import get_yahoo_pricedata
 
 from tqdm import tqdm
 
+from openpyxl import writer
+import openpyxl
+
 yf.pdr_override()
 
 # save_sp500_tickers()
@@ -25,6 +28,8 @@ yf.pdr_override()
 def compile_data():
     '''
     For the start we just compile the Adj Close column.
+
+    - new symbol GEHC added by running this function
     :return:
     '''
     with open("sp500tickers.pickle", "rb") as f:
@@ -57,6 +62,7 @@ def compile_data():
 
     print(main_df)
     main_df.to_csv('sp500_joined_closes.csv')
+    main_df.to_excel('sp500_joined_closes.xlsx',  engine='openpyxl')
 
 
 compile_data()

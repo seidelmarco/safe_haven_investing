@@ -71,7 +71,7 @@ def talk_to_me():
 # SQLalchemy - create the engine
 def sqlengine():
     '''
-
+    NotImplementedError: This method is not implemented for SQLAlchemy 2.0. -> Solution: future=False
     :return:
     '''
     sql_string = hidden.alchemy(hidden.secrets_safehaven())
@@ -93,3 +93,12 @@ def sqlengine():
     return engine
 
 
+def sqlengine_pull_from_db():
+    '''
+    NotImplementedError: This method is not implemented for SQLAlchemy 2.0. -> Solution: future=False
+    :return:
+    '''
+    sql_string = hidden.alchemy(hidden.secrets_safehaven())
+    engine = create_engine(sql_string, echo=True, future=False)
+
+    return engine
