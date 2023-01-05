@@ -97,25 +97,36 @@ Das in Funktion wrappen, dass es nicht immer komplett durchläuft ...
 '''
 # let's run it against all tickers from sp500:
 # Todo : in Funktion packen
-with open('sp500tickers.pickle', 'rb') as f:
-    tickers = pickle.load(f)
 
-accuracies = list()
-for count, ticker in enumerate(tqdm(tickers)):
 
-    if count % 10 == 0:
-        print(count)
-        time.sleep(2)
+def do_ml_allsp500():
+    '''
 
-    try:
-        accuracy = do_ml(ticker, use_knn=False)
-    except ValueError as e:
-        warnings.warn(
-            'Wahrscheinlich nicht min 2 labels vorhanden: {}'.format(e), UserWarning)
-        time.sleep(10)
-        continue # pass means 'no code to execute here' placeholder for future code, continue just skips the iteration
-    accuracies.append(accuracy)
+    :return:
+    '''
+    with open('sp500tickers.pickle', 'rb') as f:
+        tickers = pickle.load(f)
 
-    print("{} accuracy: {}. ".format(ticker, accuracy))
-    print('')
-print('Average accuracy: ', mean(accuracies))
+    accuracies = list()
+    for count, ticker in enumerate(tqdm(tickers)):
+
+        if count % 10 == 0:
+            print(count)
+            time.sleep(2)
+
+        try:
+            accuracy = do_ml(ticker, use_knn=False)
+        except ValueError as e:
+            warnings.warn(
+                'Wahrscheinlich nicht min 2 labels vorhanden: {}'.format(e), UserWarning)
+            time.sleep(10)
+            continue # pass means 'no code to execute here' placeholder for future code, continue just skips the iteration
+        accuracies.append(accuracy)
+
+        print("{} accuracy: {}. ".format(ticker, accuracy))
+        print('')
+    print('Average accuracy: ', mean(accuracies))
+
+
+do_ml_allsp500()
+

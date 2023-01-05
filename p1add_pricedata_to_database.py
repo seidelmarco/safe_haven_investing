@@ -243,6 +243,10 @@ def push_df_to_db(df, tablename: str):
 
 
 def pull_df_from_db():
+    '''
+    # Todo : Funktion umschreiben, dass ich aus allen Tabellen und ausgewählte Spalten beim callen wählen kann
+    :return:
+    '''
     connect()
     engine = sqlengine_pull_from_db()
     sql = 'selection_ohlc'
