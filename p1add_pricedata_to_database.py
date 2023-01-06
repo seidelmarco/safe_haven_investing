@@ -226,6 +226,90 @@ def get_yahoo_ohlc_selection():
     return main_df
 
 
+def get_selection_ohlc_today():
+    '''
+    Just update the table selection_ohlc daily with one row
+
+    Since postgres-tables are limited to 1,600 columns, you only can use 3 columns per sp500-ticker.
+
+    Beware: Rowsize is 8160 Bytes max
+    :param ticker:
+    :param startdate:
+    :param enddate:
+    :return: main_df
+    '''
+
+    tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY', 'BAS.DE', 'MUV2.DE', 'BLDP', 'KO', 'DLTR',
+               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'NEL.OL', 'OGN', 'SKT', 'TDG', 'GC=F']
+    print(tickers)
+
+    if not os.path.exists('sp500_dfs'):
+        os.makedirs('sp500_dfs')
+
+    '''
+    Variables:
+    '''
+    # start = dt.datetime(2022, 1, 1) #for Yahoo via pdr
+    backone_string = back_to_the_future()
+    print(backone_string)
+    startdate = backone_string
+    enddate = None
+
+    main_df = pd.DataFrame()
+
+    # only for testing, for speed and performance reasons just test with one ticker-symbol:
+    # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY']
+    for count, ticker in enumerate(tqdm(tickers)):
+        # just in case your connection breaks, we'd like to save our progress!
+        try:
+            '''
+            data = yf.download(  # or pdr.get_data_yahoo(...
+                # tickers list or string as well
+                tickers="SPY AAPL MSFT",
+
+                # use "period" instead of start/end
+                # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+                # (optional, default is '1mo')
+                period="ytd",
+            '''
+            df = pdr.get_data_yahoo(ticker, period="1d")
+        except Exception as e:
+            warnings.warn(
+                'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+                UserWarning)
+            # fetching data for multiple tickers:
+            df = yf.download(ticker, start=startdate, end=enddate)
+        # print(df)
+        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
+        # print(df.index)
+
+        df['{}_HL_pct_diff'.format(ticker)] = (df['High'] - df['Low']) / df['Low']
+        df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
+
+        # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
+        df.rename(columns={'Adj Close': ticker + '_Adj_Close',
+                           'Open': ticker + '_Adj_Close',
+                           'High': ticker + '_High',
+                           'Low': ticker + '_Low',
+                           'Close': ticker + '_Close',
+                           'Volume': ticker + '_Volume'}, inplace=True)
+
+        # später umbenannt wieder hinzufügen
+        # df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+        # print(df)
+
+        if main_df.empty:
+            main_df = df
+        else:
+            main_df = main_df.join(df, how='outer')
+
+        if count % 10 == 0:
+            print(count)
+
+    main_df.to_excel('sp500_dfs/portfolio_selection_ohlc_only_daily.xlsx', engine='openpyxl')
+    return main_df
+
+
 def push_df_to_db(df, tablename: str):
     '''
     You can use talk_to_me() or connect()
@@ -239,7 +323,7 @@ def push_df_to_db(df, tablename: str):
 
     engine = sqlengine()
 
-    df.to_sql(tablename, con=engine, if_exists='replace', chunksize=100)
+    df.to_sql(tablename, con=engine, if_exists='append', chunksize=100)
 
 
 def pull_df_from_db():
@@ -249,14 +333,17 @@ def pull_df_from_db():
     '''
     connect()
     engine = sqlengine_pull_from_db()
-    sql = 'selection_ohlc'
+    sql = 'sp500_adjclose'
 
     # an extra integer-index-column is added
     # df = pd.read_sql(sql, con=engine)
     # Column 'Date' is used as index
-    df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], columns=['CMCL_Adj_Close',
-                                                                                       'MTNOY_Adj_Close',
-                                                                                       'GC=F_Adj_Close'])
+    df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], columns=['XOM_Adj_Close', 'AAPL_Adj_Close', 'DE_Adj_Close', 'BKNG_Adj_Close'])
+    '''
+    #columns=['CMCL_Adj_Close',
+                                                                                      # 'MTNOY_Adj_Close',
+                                                                                      # 'GC=F_Adj_Close'])
+    '''
     return df
 
 
@@ -266,15 +353,21 @@ def pull_df_from_db():
 # push_df_to_db(sp500_df, tablename='sp500_adjclose')
 
 
-# sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
-# print(sp500_only1day)
+#sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
+#print(sp500_only1day)
 
-# push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
+#push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 
-selection = get_yahoo_ohlc_selection()
-print(selection)
+#selection = get_yahoo_ohlc_selection()
+#print(selection)
 
-push_df_to_db(selection, tablename='selection_ohlc')
+# push_df_to_db(selection, tablename='selection_ohlc')
+
+
+dailysel = get_selection_ohlc_today()
+print(dailysel)
+
+push_df_to_db(dailysel, tablename='selection_ohlc')
 
 df = pull_df_from_db()
 print(df)

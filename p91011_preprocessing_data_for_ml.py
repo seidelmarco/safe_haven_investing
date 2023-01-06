@@ -54,11 +54,18 @@ def process_data_for_labels(ticker: str):
     grab a list of the existing tickers, and we'll fill any missing with 0 for now. This might be something
     you want to change in the future, but we'll go with 0 for now. Now, we want to grab the % change values
     for the next 7 days:
+
+    Todo: currently we read the pricedate from sp500_joined_closes.csv. Instead of updating this file on a daily basis,
+    Todo: it would be better to read directly from the db.
+    Todo: the sp500_joined_closes.csv is created in p7_combining_sp500data_into_one_dataframe.py
+    Todo: but the daily data comes from p6....
     :param ticker:
     :return: tickers, df
     '''
     hm_days = 7
     df = pd.read_csv('sp500_joined_closes.csv', index_col=0)
+    # Todo
+    # df = pd.read_sql()
     tickers = df.columns.values.tolist()
     # print('Liste aus func "process_data_for_labels": ',tickers)
     df.fillna(0, inplace=True)

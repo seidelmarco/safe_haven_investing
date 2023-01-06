@@ -91,6 +91,7 @@ def do_ml(ticker, use_knn=False):
 do_ml('XOM', use_knn=False)
 do_ml('AAPL', use_knn=False)
 do_ml('DE', use_knn=False)
+do_ml('BKNG', use_knn=False)
 
 '''
 Das in Funktion wrappen, dass es nicht immer komplett durchläuft ...
@@ -128,5 +129,5 @@ def do_ml_allsp500():
     print('Average accuracy: ', mean(accuracies))
 
 
-do_ml_allsp500()
+# do_ml_allsp500()
 
