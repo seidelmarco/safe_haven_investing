@@ -1,4 +1,5 @@
 import os
+import sys
 from connect import connect
 from myutils import sqlengine, sqlengine_pull_from_db, talk_to_me, timestamp, timestamp_onlyday, back_to_the_future
 import pickle
@@ -25,14 +26,92 @@ get yahoo pricedata for all 500 SP Tickers
 '''
 
 
-def get_yahoo_sp500_adjclose(reload_sp500=False):
+def get_yahoo_sp500_ohlc(ohlc_attr: str = 'Adj_Close', reload_sp500=False):
+    """
+    This function grabs one column at a time from the ohlc-data and puts it into one dataframe per type
+    :param ohlc_attr: beim callen entscheiden lassen, welche Spalte nicht gedropped wird
+    dann nur open, high usw. in df und main df schreiben lassen
+    :param reload_sp500:
+    Spalte wieder auf nur ticker umbenennen
+    :return:
+    """
+
+    if reload_sp500 is True:
+        tickers = save_sp500_tickers()
+    else:
+        with open('sp500tickers.pickle', 'rb') as f:
+            tickers = pickle.load(f)
+            print(tickers)
+
+    if not os.path.exists('sp500_dfs'):
+        os.makedirs('sp500_dfs')
+
     '''
+    Variables:
+    '''
+    # start = dt.datetime(2022, 1, 1) #for Yahoo via pdr
+    startdate = '2022-01-01'  # input('Startdatum im Format YYYY-MM-DD') usecase for yfinance
+    enddate = dt.datetime.now()
+
+    main_df = pd.DataFrame()
+
+    # only for testing, for speed and performance reasons just test with one ticker-symbol:
+    # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY']
+    for count, ticker in enumerate(tqdm(tickers)):
+        # just in case your connection breaks, we'd like to save our progress!
+        try:
+            df = pdr.get_data_yahoo(ticker, startdate, enddate)
+        except Exception as e:
+            warnings.warn(
+                'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+                UserWarning)
+            # fetching data for multiple tickers:
+            df = yf.download(ticker, start=startdate, end=enddate)
+        # print(df)
+        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
+        # print(df.index)
+
+        match ohlc_attr:
+            case 'open':
+                df.rename(columns={'Open': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+            case 'high':
+                df.rename(columns={'High': ticker}, inplace=True)
+                df.drop(['Adj Close', 'Open', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+            case 'low':
+                df.rename(columns={'Low': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Open', 'Close', 'Volume'], axis=1, inplace=True)
+            case 'close':
+                df.rename(columns={'Close': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Low', 'Open', 'Volume'], axis=1, inplace=True)
+            case 'volume':
+                df.rename(columns={'Volume': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Low', 'Close', 'Open'], axis=1, inplace=True)
+            case default:
+                # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
+                df.rename(columns={'Adj Close': ticker}, inplace=True)
+                df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+
+        if main_df.empty:
+            main_df = df
+        else:
+            main_df = main_df.join(df, how='outer')
+
+        if count % 10 == 0:
+            print(count)
+
+    main_df.to_excel('sp500_dfs/sp500_' + ohlc_attr + '.xlsx', engine='openpyxl')
+    return main_df
+
+
+def get_yahoo_sp500_adjclose(reload_sp500=False):
+    """
     Since postgres-tables are limited to 1,600 columns, you only can use 3 columns per sp500-ticker. So, here we
     just grab adusted close
 
     Rowsize is 8160 Bytes max, so we can only use one column per ticker
     :return: df
-    '''
+    """
     if reload_sp500 is True:
         tickers = save_sp500_tickers()
     else:
@@ -91,7 +170,7 @@ def get_yahoo_sp500_adjclose(reload_sp500=False):
 
 
 def get_sp500_ohlc_today(reload_sp500=False):
-    '''
+    """
     Just update the table sp500_ohlc daily with one row
 
     Since postgres-tables are limited to 1,600 columns, you only can use 3 columns per sp500-ticker. So, here we
@@ -99,7 +178,7 @@ def get_sp500_ohlc_today(reload_sp500=False):
 
     Rowsize is 8160 Bytes max, so we can only use one column per ticker
     :return: df
-    '''
+    """
     if reload_sp500 is True:
         tickers = save_sp500_tickers()
     else:
@@ -326,26 +405,30 @@ def push_df_to_db(df, tablename: str):
     df.to_sql(tablename, con=engine, if_exists='append', chunksize=100)
 
 
-def pull_df_from_db():
-    '''
+def pull_df_from_db(sql='sp500_adjclose'):
+    """
     # Todo : Funktion umschreiben, dass ich aus allen Tabellen und ausgewählte Spalten beim callen wählen kann
+    :sql: default is table 'sp500_adjclose' - you can pass any table from the db as argument
     :return:
-    '''
+    """
     connect()
     engine = sqlengine_pull_from_db()
-    sql = 'sp500_adjclose'
 
     # an extra integer-index-column is added
     # df = pd.read_sql(sql, con=engine)
     # Column 'Date' is used as index
-    df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], columns=['XOM_Adj_Close', 'AAPL_Adj_Close', 'DE_Adj_Close', 'BKNG_Adj_Close'])
+    df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], )
     '''
     #columns=['CMCL_Adj_Close',
                                                                                       # 'MTNOY_Adj_Close',
                                                                                       # 'GC=F_Adj_Close'])
+    columns=['XOM_Adj_Close', 'AAPL_Adj_Close', 'DE_Adj_Close', 'BKNG_Adj_Close']
     '''
     return df
 
+
+#sp500_volume = get_yahoo_sp500_ohlc()
+#print(sp500_volume)
 
 # sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
 # print(sp500_df)
@@ -353,10 +436,10 @@ def pull_df_from_db():
 # push_df_to_db(sp500_df, tablename='sp500_adjclose')
 
 
-#sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
-#print(sp500_only1day)
+sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
+print(sp500_only1day)
 
-#push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
+push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 
 #selection = get_yahoo_ohlc_selection()
 #print(selection)
@@ -369,5 +452,8 @@ print(dailysel)
 
 push_df_to_db(dailysel, tablename='selection_ohlc')
 
-df = pull_df_from_db()
+df = pull_df_from_db(sql='sp500_adjclose')
 print(df)
+
+#sys.exit('Jetzt ist aber Schluss hier!')
+

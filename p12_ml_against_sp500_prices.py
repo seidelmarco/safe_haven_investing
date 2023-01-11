@@ -93,12 +93,6 @@ do_ml('AAPL', use_knn=False)
 do_ml('DE', use_knn=False)
 do_ml('BKNG', use_knn=False)
 
-'''
-Das in Funktion wrappen, dass es nicht immer komplett durchläuft ...
-'''
-# let's run it against all tickers from sp500:
-# Todo : in Funktion packen
-
 
 def do_ml_allsp500():
     '''
