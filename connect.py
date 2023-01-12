@@ -3,7 +3,8 @@ from config import config
 
 
 def connect():
-    '''
+    """
+    This file was recommended by postgresqltutorial.com
     Connect to the PostgreSQL database server
     :return: 'Database connection closed.' It means that you have successfully connected to the
     PostgreSQL database server.
@@ -11,7 +12,7 @@ def connect():
     Troubleshooting:
     The connect() function raises the DatabaseError exception if an error occurred.
     To see how it works, you can change the connection parameters in the database.ini file.
-    '''
+    """
     conn = None
     try:
         # read connection parameters - params ist ein geschaffenes dict aus config.py

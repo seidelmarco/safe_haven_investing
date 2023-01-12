@@ -430,16 +430,16 @@ def pull_df_from_db(sql='sp500_adjclose'):
 #sp500_volume = get_yahoo_sp500_ohlc()
 #print(sp500_volume)
 
-# sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
-# print(sp500_df)
+sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
+print(sp500_df)
 
-# push_df_to_db(sp500_df, tablename='sp500_adjclose')
+push_df_to_db(sp500_df, tablename='sp500_adjclose')
 
 
-sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
-print(sp500_only1day)
+#sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
+#print(sp500_only1day)
 
-push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
+#push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 
 #selection = get_yahoo_ohlc_selection()
 #print(selection)
@@ -447,10 +447,10 @@ push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 # push_df_to_db(selection, tablename='selection_ohlc')
 
 
-dailysel = get_selection_ohlc_today()
-print(dailysel)
+# dailysel = get_selection_ohlc_today()
+# print(dailysel)
 
-push_df_to_db(dailysel, tablename='selection_ohlc')
+# push_df_to_db(dailysel, tablename='selection_ohlc')
 
 df = pull_df_from_db(sql='sp500_adjclose')
 print(df)

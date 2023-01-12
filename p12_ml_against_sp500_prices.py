@@ -123,5 +123,5 @@ def do_ml_allsp500():
     print('Average accuracy: ', mean(accuracies))
 
 
-# do_ml_allsp500()
+do_ml_allsp500()
 

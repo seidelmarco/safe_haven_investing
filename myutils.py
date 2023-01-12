@@ -76,7 +76,7 @@ def sqlengine():
     with engine.connect() as con:
         con.execute(text('DROP TABLE IF EXISTS hat_geklappt;'))
         con.execute(text('CREATE TABLE hat_geklappt (id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY, text TEXT,'
-                         'created_at TIMESTAMPTZ DEFAULT NOW()) TABLESPACE safehaven;'))
+                         'created_at TIMESTAMPTZ DEFAULT NOW());'))  # TABLESPACE safehaven
         con.commit()
         con.execute(
             text("INSERT INTO hat_geklappt (text) VALUES ('If you can read this, then the engine works - BRAVO!');"))

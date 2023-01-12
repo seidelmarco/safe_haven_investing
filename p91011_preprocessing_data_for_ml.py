@@ -64,8 +64,8 @@ def process_data_for_labels(ticker: str):
     '''
     hm_days = 7
     df = pd.read_csv('sp500_joined_closes.csv', index_col=0)
-    # Todo
-    # df = pd.read_sql()
+    # Todo - read sql-table
+    # Todo df = pd.read_sql()
     tickers = df.columns.values.tolist()
     # print('Liste aus func "process_data_for_labels": ',tickers)
     df.fillna(0, inplace=True)
@@ -102,7 +102,9 @@ def buy_sell_hold(*args):
     :return:
     '''
     cols = [c for c in args]
-    requirement = 0.02
+    # set for test purposes on 5 - 10 percent so that you can see unreal exxagerated results - visibility is better
+    # default in tutorial: 2 percent
+    requirement = 0.05
     for col in cols:
         if col > requirement:
             return 1
