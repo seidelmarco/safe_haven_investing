@@ -33,7 +33,7 @@ plt.style.use('fivethirtyeight')
 
 
 def do_ml(ticker, use_knn=False):
-    '''
+    """
     Then, we're bringing in the VotingClassifier and RandomForestClassifier.
     The voting classifier is just what it sounds like. Basically, it's a classifier that will let us combine
     many classifiers, and allow them to each get a "vote" on what they think the class of the featuresets is.
@@ -43,7 +43,7 @@ def do_ml(ticker, use_knn=False):
     voting classifier
     :param ticker:
     :return:
-    '''
+    """
 
     X, y, df = extract_featuresets(ticker)
 
@@ -92,13 +92,15 @@ do_ml('XOM', use_knn=False)
 do_ml('AAPL', use_knn=False)
 do_ml('DE', use_knn=False)
 do_ml('BKNG', use_knn=False)
+do_ml('CVX', use_knn=False)
+do_ml('TDG', use_knn=False)
 
 
 def do_ml_allsp500():
-    '''
+    """
 
     :return:
-    '''
+    """
     with open('sp500tickers.pickle', 'rb') as f:
         tickers = pickle.load(f)
 
@@ -121,6 +123,10 @@ def do_ml_allsp500():
         print("{} accuracy: {}. ".format(ticker, accuracy))
         print('')
     print('Average accuracy: ', mean(accuracies))
+
+    # Todo: build main_df for accuracy and predictions of sp500_ticker
+    # Todo: after it push db and pull and then sort dataframe like desc asc min max \n
+    # Todo: then to_html and plotten of Top 10
 
 
 do_ml_allsp500()

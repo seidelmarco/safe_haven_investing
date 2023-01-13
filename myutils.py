@@ -91,11 +91,12 @@ def sqlengine():
 
 def sqlengine_pull_from_db():
     """
+    echo=True for debugging, but it's disturbing in do_ml()-function
     NotImplementedError: This method is not implemented for SQLAlchemy 2.0. -> Solution: future=False
     :return:
     """
     sql_string = hidden.alchemy(hidden.secrets_safehaven())
-    engine = create_engine(sql_string, echo=True, future=False)
+    engine = create_engine(sql_string, echo=False, future=False)
 
     return engine
 

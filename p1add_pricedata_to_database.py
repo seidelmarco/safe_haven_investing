@@ -151,7 +151,7 @@ def get_yahoo_sp500_adjclose(reload_sp500=False):
         # df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
 
         # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
-        df.rename(columns={'Adj Close': ticker+'_Adj_Close'}, inplace=True)
+        df.rename(columns={'Adj Close': ticker}, inplace=True)
 
         # später umbenannt wieder hinzufügen
         df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
@@ -389,12 +389,76 @@ def get_selection_ohlc_today():
     return main_df
 
 
-def push_df_to_db(df, tablename: str):
+def get_yahoo_ohlc_commodities():
+    """
+    I need crucially my own ticker list for continuous commodities,
+    :param ticker:
+    :param startdate:
+    :param enddate:
+    :return: main_df
+    """
+    tickers = ['GC=F']
+    print(tickers)
+
+    if not os.path.exists('sp500_dfs'):
+        os.makedirs('sp500_dfs')
+
     '''
+    Variables:
+    '''
+    # start = dt.datetime(2022, 1, 1) #for Yahoo via pdr
+    startdate = '2022-01-01'  # input('Startdatum im Format YYYY-MM-DD') usecase for yfinance
+    enddate = dt.datetime.now()
+
+    main_df = pd.DataFrame()
+
+    for count, ticker in enumerate(tqdm(tickers)):
+        # just in case your connection breaks, we'd like to save our progress!
+        try:
+            df = pdr.get_data_yahoo(ticker, startdate, enddate)
+        except Exception as e:
+            warnings.warn(
+                'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+                UserWarning)
+            # fetching data for multiple tickers:
+            df = yf.download(ticker, start=startdate, end=enddate)
+        #print(df)
+        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
+        #print(df.index)
+
+        df['{}_HL_pct_diff'.format(ticker)] = (df['High'] - df['Low']) / df['Low']
+        df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
+
+        # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
+        df.rename(columns={'Adj Close': ticker+'_Adj_Close',
+                           'Open': ticker+'_Adj_Close',
+                           'High': ticker+'_High',
+                           'Low': ticker+'_Low',
+                           'Close': ticker+'_Close',
+                           'Volume': ticker+'_Volume'}, inplace=True)
+
+        # später umbenannt wieder hinzufügen
+        # df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+        # print(df)
+
+        if main_df.empty:
+            main_df = df
+        else:
+            main_df = main_df.join(df, how='outer')
+
+        if count % 10 == 0:
+            print(count)
+
+    main_df.to_excel('sp500_dfs/portfolio_selection_ohlc.xlsx', engine='openpyxl')
+    return main_df
+
+
+def push_df_to_db(df, tablename: str):
+    """
     You can use talk_to_me() or connect()
     :tablename: str
     :return:
-    '''
+    """
 
     # talk_to_me()
 
@@ -427,33 +491,39 @@ def pull_df_from_db(sql='sp500_adjclose'):
     return df
 
 
-#sp500_volume = get_yahoo_sp500_ohlc()
-#print(sp500_volume)
+if __name__ == '__main__':
+    ohlc_attr_input = input('OHLC-Attribut: ')
+    sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
-sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
-print(sp500_df)
+    push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
 
-push_df_to_db(sp500_df, tablename='sp500_adjclose')
+    #sp500_volume = get_yahoo_sp500_ohlc()
+    #print(sp500_volume)
 
+    #sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
+    #print(sp500_df)
 
-#sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
-#print(sp500_only1day)
-
-#push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
-
-#selection = get_yahoo_ohlc_selection()
-#print(selection)
-
-# push_df_to_db(selection, tablename='selection_ohlc')
+    #push_df_to_db(sp500_df, tablename='sp500_adjclose')
 
 
-# dailysel = get_selection_ohlc_today()
-# print(dailysel)
+    #sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
+    #print(sp500_only1day)
 
-# push_df_to_db(dailysel, tablename='selection_ohlc')
+    #push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 
-df = pull_df_from_db(sql='sp500_adjclose')
-print(df)
+    #selection = get_yahoo_ohlc_selection()
+    #print(selection)
 
-#sys.exit('Jetzt ist aber Schluss hier!')
+    # push_df_to_db(selection, tablename='selection_ohlc')
+
+
+    # dailysel = get_selection_ohlc_today()
+    # print(dailysel)
+
+    # push_df_to_db(dailysel, tablename='selection_ohlc')
+
+    df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+    print(df)
+
+    #sys.exit('Jetzt ist aber Schluss hier!')
 

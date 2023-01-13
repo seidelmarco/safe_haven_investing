@@ -36,6 +36,7 @@ from tqdm import tqdm
 # dictionary-subclass for counting many objects at once:
 from collections import Counter
 
+from p1add_pricedata_to_database import pull_df_from_db
 import p8_sp500_correlation_table as p8
 
 yf.pdr_override()
@@ -63,7 +64,8 @@ def process_data_for_labels(ticker: str):
     :return: tickers, df
     '''
     hm_days = 7
-    df = pd.read_csv('sp500_joined_closes.csv', index_col=0)
+    # df = pd.read_csv('sp500_joined_closes.csv', index_col=0) for default, try except einbauen :-)
+    df = pull_df_from_db(sql='sp500_adjclose')
     # Todo - read sql-table
     # Todo df = pd.read_sql()
     tickers = df.columns.values.tolist()
@@ -85,9 +87,6 @@ def process_data_for_labels(ticker: str):
 
     df.fillna(0, inplace=True)
     return tickers, df
-
-
-# print(process_data_for_labels('DE'))
 
 
 def buy_sell_hold(*args):
@@ -125,11 +124,11 @@ def buy_sell_hold(*args):
 
 
 def extract_featuresets(ticker):
-    '''
+    """
 
     :param ticker:
     :return:
-    '''
+    """
 
     tickers, df = process_data_for_labels(ticker)
 
@@ -167,7 +166,10 @@ def extract_featuresets(ticker):
     return X, y, df
 
 
-# X, y, df = extract_featuresets('XOM')
-# print('X: ', X, 'y: ', y)
-# print('')
-# print(df)
+if __name__ == '__main__':
+    print(process_data_for_labels('DE'))
+    X, y, df = extract_featuresets('XOM')
+    print('X: ', X, 'y: ', y)
+    print('')
+    print(df)
+
