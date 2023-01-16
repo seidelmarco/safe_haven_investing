@@ -88,14 +88,6 @@ def do_ml(ticker, use_knn=False):
                         # aufrufen, in einer assigneden Variable wird aber nichts gespeichert
 
 
-do_ml('XOM', use_knn=False)
-do_ml('AAPL', use_knn=False)
-do_ml('DE', use_knn=False)
-do_ml('BKNG', use_knn=False)
-do_ml('CVX', use_knn=False)
-do_ml('TDG', use_knn=False)
-
-
 def do_ml_allsp500():
     """
 
@@ -105,6 +97,9 @@ def do_ml_allsp500():
         tickers = pickle.load(f)
 
     accuracies = list()
+    global main_df
+    main_df = pd.DataFrame()
+
     for count, ticker in enumerate(tqdm(tickers)):
 
         if count % 10 == 0:
@@ -122,12 +117,30 @@ def do_ml_allsp500():
 
         print("{} accuracy: {}. ".format(ticker, accuracy))
         print('')
+
+        df = pd.DataFrame(columns={'Symbol': ticker, 'Confidence': accuracy})
+
+        if main_df.empty:
+            main_df = df
+        else:
+            main_df = main_df.join(df, how='outer')
+
     print('Average accuracy: ', mean(accuracies))
+    print(df)
+    return main_df
 
     # Todo: build main_df for accuracy and predictions of sp500_ticker
     # Todo: after it push db and pull and then sort dataframe like desc asc min max \n
     # Todo: then to_html and plotten of Top 10
 
 
-do_ml_allsp500()
+if __name__ == '__main__':
+    do_ml('XOM', use_knn=False)
+    do_ml('AAPL', use_knn=False)
+    do_ml('DE', use_knn=False)
+    do_ml('BKNG', use_knn=False)
+    do_ml('CVX', use_knn=False)
+    do_ml('TDG', use_knn=False)
+    main_df = do_ml_allsp500()
+    print(main_df)
 

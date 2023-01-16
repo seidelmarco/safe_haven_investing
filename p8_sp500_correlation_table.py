@@ -18,10 +18,15 @@ import numpy as np
 from tqdm import tqdm
 
 yf.pdr_override()
-style.use('ggplot')
+# style.use('ggplot')
+plt.style.use('fivethirtyeight')
 
 
 def visualize_data():
+    """
+
+    :return:
+    """
     df = pd.read_csv('sp500_joined_closes.csv')
     print(df)
 
@@ -94,6 +99,5 @@ def visualize_data():
     plt.show()
 
 
-# immer auskommentieren, wenn ich in einer höher nummerierten Datei diese Funktion verwende
-# (ansonsten wird die Funktion doppelt aufgerufen)
-# visualize_data()
+if __name__ == '__main__':
+    visualize_data()

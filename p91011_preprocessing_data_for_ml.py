@@ -1,4 +1,4 @@
-'''
+"""
 
 p9: preprocessing data for ML
 p10 - p11: creating targets for machine learning labels
@@ -10,9 +10,9 @@ emails to filter them by class label: Spam or Not Spam.
 We take "featuresets" and try to map them to "labels". We need to convert our existing data to featuresets and labels.
 
 Features: (could be other companies' prices) but here pricing changes for certain days for all companies.
-Labels: buy,sell or do nothing regarding a stock - buy if rises 2% in 7 days, sell if falls 2% in 7 days,
+Labels: buy,sell or do nothing regarding a stock - buy if rises 2% within 7 days, sell if falls 2% within 7 days,
 in between - do nothing
-'''
+"""
 
 import bs4 as bs
 import pickle
@@ -36,7 +36,7 @@ from tqdm import tqdm
 # dictionary-subclass for counting many objects at once:
 from collections import Counter
 
-from p1add_pricedata_to_database import pull_df_from_db
+from p1add_pricedata_to_database import push_df_to_db, pull_df_from_db
 import p8_sp500_correlation_table as p8
 
 yf.pdr_override()
@@ -48,7 +48,7 @@ plt.style.use('fivethirtyeight')
 
 
 def process_data_for_labels(ticker: str):
-    '''
+    """
     This function will take one parameter: the ticker in question. Each model will be trained on a single company.
     Next, we want to know how many days into the future we need prices for. We're choosing 7 here.
     Now, we'll read in the data for the close prices for all companies that we've saved in the past,
@@ -56,18 +56,25 @@ def process_data_for_labels(ticker: str):
     you want to change in the future, but we'll go with 0 for now. Now, we want to grab the % change values
     for the next 7 days:
 
-    Todo: currently we read the pricedate from sp500_joined_closes.csv. Instead of updating this file on a daily basis,
-    Todo: it would be better to read directly from the db.
-    Todo: the sp500_joined_closes.csv is created in p7_combining_sp500data_into_one_dataframe.py
-    Todo: but the daily data comes from p6....
+    To start, let's say a company is a buy if, within the next 7 days, its price goes up more than 2% and it is a
+    sell if the price goes down more than 2% within those 7 days.
+
+    Hint: the sp500_joined_closes.csv is created in p7_combining_sp500data_into_one_dataframe.py,
+    but the daily data comes from p6....
     :param ticker:
     :return: tickers, df
-    '''
+    """
     hm_days = 7
-    # df = pd.read_csv('sp500_joined_closes.csv', index_col=0) for default, try except einbauen :-)
-    df = pull_df_from_db(sql='sp500_adjclose')
-    # Todo - read sql-table
-    # Todo df = pd.read_sql()
+
+    try:
+        df = pull_df_from_db(sql='sp500_adjclose')
+    except Exception as e:
+        warnings.warn(
+            'In case of pull DB fails due to connection: {}, falling back to backup sp500_joined_closes.csv '.format(e),
+            UserWarning
+        )
+        df = pd.read_csv('sp500_joined_closes.csv', index_col=0) # for default, try except einbauen :-)
+
     tickers = df.columns.values.tolist()
     # print('Liste aus func "process_data_for_labels": ',tickers)
     df.fillna(0, inplace=True)
@@ -90,20 +97,23 @@ def process_data_for_labels(ticker: str):
 
 
 def buy_sell_hold(*args):
-    '''
+    """
     Using args here, so we can take any number of columns here that we want.
     The idea here is that we're going to map this function to a Pandas DataFrame column,
     and that column will be our "label." A -1 is a sell, 0 is hold, and 1 is a buy.
     The *args will be those future price change columns, and we're interested if we see movement
     that exceeds 2% in either direction. Do note, this isn't a totally perfect function.
     For example, price might go up 2%, then fall 2%, and we might not be prepared for that, but it will do for now.
+
+    To start, let's say a company is a buy if, within the next 7 days, its price goes up more than 2% and it is a
+    sell if the price goes down more than 2% within those 7 days.
     :param args:
     :return:
-    '''
+    """
     cols = [c for c in args]
     # set for test purposes on 5 - 10 percent so that you can see unreal exxagerated results - visibility is better
     # default in tutorial: 2 percent
-    requirement = 0.05
+    requirement = 0.03
     for col in cols:
         if col > requirement:
             return 1
@@ -163,12 +173,14 @@ def extract_featuresets(ticker):
     # The lowercase y is our "target" or our "label." Basically what we're trying to map our featuresets to.
     y = df['{}_target'.format(ticker)].values
 
+    push_df_to_db(df, 'featuresets_'+ticker)
+
     return X, y, df
 
 
 if __name__ == '__main__':
     print(process_data_for_labels('DE'))
-    X, y, df = extract_featuresets('XOM')
+    X, y, df = extract_featuresets('DE')
     print('X: ', X, 'y: ', y)
     print('')
     print(df)

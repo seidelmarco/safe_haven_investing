@@ -1,9 +1,9 @@
 # import this
 
-'''
+"""
 In Windows muss man so die packages installieren
 py -m pip install pandas
-'''
+"""
 import datetime as dt
 import time
 import warnings
@@ -36,14 +36,14 @@ global dataframe
 
 
 def get_pricedata(symbols: list, startdate: str, enddate: dt.datetime) -> str:
-    '''
+    """
     Tipp: am Besten für mehrere Ticker nutzen
     die Syntax entspricht dem Pandas-Datareader, die API wurde aber von yfinance overridden ("hijacked")
     :param symbols: strings oder Liste (oder Liste von Listen oder Liste von strings, depends on API)
     :param startdate: string, wenn wir yahoo oder yfinance als Package nehmen
     :param enddate: aufpassen, ob wir dt.datetime oder Funktion timestamp aus myutils nehmen!
     :return: ein Pandas-Dataframe - ein Panel bei mehreren Tickern
-    '''
+    """
 
     global dataframe
     try:
@@ -102,7 +102,7 @@ def get_symbol_returns_from_yahoo(symbol: str, startdate=None, enddate=None):
 
 
 def get_pricedata_yfinance(ticker: str, startdate: str, enddate: dt.datetime):
-    '''
+    """
     Tipp: am besten nur für einen Ticker nutzen
     data = yf.download(  # or pdr.get_data_yahoo(...
         # tickers list or string as well
@@ -150,7 +150,7 @@ def get_pricedata_yfinance(ticker: str, startdate: str, enddate: dt.datetime):
     :param startdate:
     :param enddate:
     :return:
-    '''
+    """
 
     # fetching data for multiple tickers:
     data = yf.download(ticker, start=startdate, end=enddate)
@@ -159,11 +159,11 @@ def get_pricedata_yfinance(ticker: str, startdate: str, enddate: dt.datetime):
 
 
 def stock_info(symbol: str):
-    '''
+    """
     Nutzt einige Features von yfinance, die als Listen oder dicts returned werden
     :param symbol: any ticker - direkt als string in Funktion eintragen oder oben Variable deklarieren
     :return: object, info, calendar, earnings, news
-    '''
+    """
     obj = yf.Ticker(symbol)
 
     # get stock info
@@ -188,14 +188,19 @@ def stock_info(symbol: str):
     return obj, info, calendar, earnings, news, hist, hist_metadata
 
 
-#df = get_pricedata(tickers, start, end)
-#print(df)
+if __name__ == '__main__':
+    obj = yf.Ticker('DE')
+    print(obj)
+    print(obj.info)
+    #df = get_pricedata(tickers, start, end)
+    #print(df)
 
-#df_yf = get_pricedata_yfinance(tickers_yf, start, end)
-#print(df_yf)
-#print(df_yf.index)
+    #df_yf = get_pricedata_yfinance(tickers_yf, start, end)
+    #print(df_yf)
+    #print(df_yf.index)
 
-#print(stock_info('DE'))
+    #obj, info, calendar, earnings, news, hist, hist_metadata = stock_info('DE')
+    #print(obj)
 
-#df = get_symbol_returns_from_yahoo(tickers_yf, start, end)
-#print(df)
+    #df = get_symbol_returns_from_yahoo(tickers_yf, start, end)
+    #print(df)

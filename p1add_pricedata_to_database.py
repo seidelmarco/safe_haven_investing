@@ -26,7 +26,7 @@ get yahoo pricedata for all 500 SP Tickers
 '''
 
 
-def get_yahoo_sp500_ohlc(ohlc_attr: str = 'Adj_Close', reload_sp500=False):
+def get_yahoo_sp500_ohlc(ohlc_attr: str = 'adjclose', reload_sp500=False):
     """
     This function grabs one column at a time from the ohlc-data and puts it into one dataframe per type
     :param ohlc_attr: beim callen entscheiden lassen, welche Spalte nicht gedropped wird
@@ -169,7 +169,7 @@ def get_yahoo_sp500_adjclose(reload_sp500=False):
     return main_df
 
 
-def get_sp500_ohlc_today(reload_sp500=False):
+def get_sp500_ohlc_today(ohlc_attr: str = 'adjclose', reload_sp500=False):
     """
     Just update the table sp500_ohlc daily with one row
 
@@ -201,7 +201,7 @@ def get_sp500_ohlc_today(reload_sp500=False):
     main_df = pd.DataFrame()
 
     # only for testing, for speed and performance reasons just test with one ticker-symbol:
-    # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY']
+    # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY']
     for count, ticker in enumerate(tqdm(tickers)):
         # just in case your connection breaks, we'd like to save our progress!
         try:
@@ -212,19 +212,30 @@ def get_sp500_ohlc_today(reload_sp500=False):
                 UserWarning)
             # fetching data for multiple tickers:
             df = yf.download(ticker, start=startdate, end=enddate)
-        #print(df)
-        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
-        #print(df.index)
-
-        # df['{}_HL_pct_diff'.format(ticker)] = (df['High'] - df['Low']) / df['Low']
-        # df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
-
-        # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
-        df.rename(columns={'Adj Close': ticker+'_Adj_Close'}, inplace=True)
-
-        # später umbenannt wieder hinzufügen
-        df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
         # print(df)
+        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist
+        # df = data.set_index('Date', inplace=True)
+        # print(df.index)
+
+        match ohlc_attr:
+            case 'open':
+                df.rename(columns={'Open': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+            case 'high':
+                df.rename(columns={'High': ticker}, inplace=True)
+                df.drop(['Adj Close', 'Open', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+            case 'low':
+                df.rename(columns={'Low': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Open', 'Close', 'Volume'], axis=1, inplace=True)
+            case 'close':
+                df.rename(columns={'Close': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Low', 'Open', 'Volume'], axis=1, inplace=True)
+            case 'volume':
+                df.rename(columns={'Volume': ticker}, inplace=True)
+                df.drop(['Adj Close', 'High', 'Low', 'Close', 'Open'], axis=1, inplace=True)
+            case default:
+                df.rename(columns={'Adj Close': ticker}, inplace=True)
+                df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
 
         if main_df.empty:
             main_df = df
@@ -234,12 +245,12 @@ def get_sp500_ohlc_today(reload_sp500=False):
         if count % 10 == 0:
             print(count)
 
-    main_df.to_excel('sp500_dfs/sp500_adjclose_only_daily.xlsx', engine='openpyxl')
+    main_df.to_excel('sp500_dfs/sp500_lastday_' + ohlc_attr + '.xlsx', engine='openpyxl')
     return main_df
 
 
 def get_yahoo_ohlc_selection():
-    '''
+    """
     I need crucially my own ticker list which is reliable due to the reasons, that there are too many unforeseen
     changes in the SP500 (like the new ticker GEHC on 2023-01-04) and I need securities which are not constituents
     of the SP500
@@ -247,9 +258,9 @@ def get_yahoo_ohlc_selection():
     :param startdate:
     :param enddate:
     :return: main_df
-    '''
+    """
     tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY', 'BAS.DE', 'MUV2.DE', 'BLDP', 'KO', 'DLTR',
-               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'NEL.OL', 'OGN', 'SKT', 'TDG', 'GC=F']
+               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'NEL.OL', 'OGN', 'SKT', 'TDG', 'DRD']
     print(tickers)
 
     if not os.path.exists('sp500_dfs'):
@@ -319,7 +330,7 @@ def get_selection_ohlc_today():
     '''
 
     tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY', 'BAS.DE', 'MUV2.DE', 'BLDP', 'KO', 'DLTR',
-               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'NEL.OL', 'OGN', 'SKT', 'TDG', 'GC=F']
+               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'NEL.OL', 'OGN', 'SKT', 'TDG']
     print(tickers)
 
     if not os.path.exists('sp500_dfs'):
@@ -392,12 +403,13 @@ def get_selection_ohlc_today():
 def get_yahoo_ohlc_commodities():
     """
     I need crucially my own ticker list for continuous commodities,
+    :param ohlc_attr:
     :param ticker:
     :param startdate:
     :param enddate:
     :return: main_df
     """
-    tickers = ['GC=F']
+    tickers = ['GC=F', 'PL=F', 'HG=F', 'CL=F']
     print(tickers)
 
     if not os.path.exists('sp500_dfs'):
@@ -430,16 +442,12 @@ def get_yahoo_ohlc_commodities():
         df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
 
         # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
-        df.rename(columns={'Adj Close': ticker+'_Adj_Close',
-                           'Open': ticker+'_Adj_Close',
-                           'High': ticker+'_High',
-                           'Low': ticker+'_Low',
-                           'Close': ticker+'_Close',
-                           'Volume': ticker+'_Volume'}, inplace=True)
-
-        # später umbenannt wieder hinzufügen
-        # df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
-        # print(df)
+        df.rename(columns={'Adj Close': ticker + '_Adj_Close',
+                           'Open': ticker + '_Adj_Close',
+                           'High': ticker + '_High',
+                           'Low': ticker + '_Low',
+                           'Close': ticker + '_Close',
+                           'Volume': ticker + '_Volume'}, inplace=True)
 
         if main_df.empty:
             main_df = df
@@ -449,7 +457,7 @@ def get_yahoo_ohlc_commodities():
         if count % 10 == 0:
             print(count)
 
-    main_df.to_excel('sp500_dfs/portfolio_selection_ohlc.xlsx', engine='openpyxl')
+    main_df.to_excel('sp500_dfs/commodities_ohlc.xlsx', engine='openpyxl')
     return main_df
 
 
@@ -493,9 +501,20 @@ def pull_df_from_db(sql='sp500_adjclose'):
 
 if __name__ == '__main__':
     ohlc_attr_input = input('OHLC-Attribut: ')
+    # Todo: here still build in sysvar for command line prompt via calling the file without IDE
+    #sp500_df_lastday_per_attr = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+    #push_df_to_db(sp500_df_lastday_per_attr, tablename='sp500_'+ohlc_attr_input)
+
     sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
     push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
+
+    df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+    print(df)
+
+    #commodities_ohlc = get_yahoo_ohlc_commodities()
+    #push_df_to_db(commodities_ohlc, tablename='commodities_ohlc')
+    #print(commodities_ohlc)
 
     #sp500_volume = get_yahoo_sp500_ohlc()
     #print(sp500_volume)
@@ -514,7 +533,7 @@ if __name__ == '__main__':
     #selection = get_yahoo_ohlc_selection()
     #print(selection)
 
-    # push_df_to_db(selection, tablename='selection_ohlc')
+    #push_df_to_db(selection, tablename='selection_ohlc')
 
 
     # dailysel = get_selection_ohlc_today()
@@ -522,8 +541,8 @@ if __name__ == '__main__':
 
     # push_df_to_db(dailysel, tablename='selection_ohlc')
 
-    df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
-    print(df)
+    #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+    #print(df)
 
     #sys.exit('Jetzt ist aber Schluss hier!')
 
