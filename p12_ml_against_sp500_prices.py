@@ -45,7 +45,7 @@ def do_ml(ticker, use_knn=False):
     :return:
     """
 
-    X, y, df = extract_featuresets(ticker)
+    X, y, df, ticker = extract_featuresets(ticker)
 
     # We've got our featuresets and labels, now we want to shuffle them up, train, and then test:
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)

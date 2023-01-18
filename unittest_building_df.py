@@ -39,7 +39,7 @@ main_df = pd.DataFrame()
 ticker = ['DE']
 data = [0.4567]
 
-X, y, df_featureset = extract_featuresets(ticker)
+X, y, df_featureset, ticker = extract_featuresets(ticker)
 print(f'X: {X}, y: {y}')
 print('Dataframe Featureset: ')
 print(df_featureset)

@@ -151,8 +151,10 @@ def extract_featuresets(ticker):
                                               df['{}_6d'.format(ticker)],
                                               df['{}_7d'.format(ticker)]
                                               ))
-
-    # print(df['{}_target'.format(ticker)])
+    # next three lines for debugging:
+    #print(df['{}_target'.format(ticker)])
+    #print(type(df['{}_target'.format(ticker)]))
+    #stop = input('...')
     vals = df['{}_target'.format(ticker)].values.tolist()
     str_vals = [str(i) for i in vals]
     print('')
@@ -173,15 +175,15 @@ def extract_featuresets(ticker):
     # The lowercase y is our "target" or our "label." Basically what we're trying to map our featuresets to.
     y = df['{}_target'.format(ticker)].values
 
-    push_df_to_db(df, 'featuresets_'+ticker)
+    # push_df_to_db(df, 'featuresets_'+ticker) #Todo: ach du scheiße, ich habe p12 gestartet und mir hat es alle featuresets in die DB geschrieben ;-)
 
-    return X, y, df
+    return X, y, df, ticker
 
 
 if __name__ == '__main__':
     print(process_data_for_labels('DE'))
-    X, y, df = extract_featuresets('DE')
+    X, y, df, ticker = extract_featuresets('DE')
     print('X: ', X, 'y: ', y)
     print('')
     print(df)
-
+    push_df_to_db(df, 'featuresets_' + ticker)

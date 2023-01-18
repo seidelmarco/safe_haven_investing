@@ -505,11 +505,17 @@ if __name__ == '__main__':
     #sp500_df_lastday_per_attr = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
     #push_df_to_db(sp500_df_lastday_per_attr, tablename='sp500_'+ohlc_attr_input)
 
-    sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+    #sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
-    push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
+    #push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
 
-    df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+    #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+    #print(df)
+
+    sp500_df_per_attr_lastday = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+    push_df_to_db(sp500_df_per_attr_lastday, tablename='sp500_' + ohlc_attr_input)
+
+    df = pull_df_from_db(sql='sp500_' + ohlc_attr_input)
     print(df)
 
     #commodities_ohlc = get_yahoo_ohlc_commodities()
