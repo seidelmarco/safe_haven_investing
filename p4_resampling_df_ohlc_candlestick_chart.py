@@ -22,7 +22,7 @@ tickers_yf = 'DE' # yfinance nutzt nur einen string - auch bei mehreren Tickern 
 
 
 def ohlc_candlestick(symbol: str, startdate: str, enddate: dt.datetime):
-    '''
+    """
     IMPORTANT! This function use the legacy method ohlc_candlestick from the deprecated mpl_finance:
     Example: from mplfinance.original_flavor import candlestick_ohlc (use this until you are accustomed
     to the methods of mplfinance
@@ -37,7 +37,7 @@ def ohlc_candlestick(symbol: str, startdate: str, enddate: dt.datetime):
     :param startdate: a string
     :param enddate: a dt.datetime, set to now/today
     :return:
-    '''
+    """
 
     df = get_pricedata_yfinance(symbol, startdate=startdate, enddate=enddate)
 
@@ -64,14 +64,14 @@ def ohlc_candlestick(symbol: str, startdate: str, enddate: dt.datetime):
 
 
 def ohlc_candlestick_update(symbol: str, startdate: str, enddate: dt.datetime):
-    '''
+    """
     This newer function uses the maintained package mplfinance 0.12.9b7
 
     :param symbol:
     :param startdate:
     :param enddate:
     :return:
-    '''
+    """
 
     df = get_pricedata_yfinance(symbol, startdate=startdate, enddate=enddate)
     df.index.name = 'Datum'

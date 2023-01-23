@@ -57,7 +57,7 @@ def get_pricedata(symbols: list, startdate: str, enddate: dt.datetime) -> str:
 
 
 def get_symbol_returns_from_yahoo(symbol: str, startdate=None, enddate=None):
-    '''
+    """
 
     Wrapper for pandos.io.data.gat_data_yahoo() but overridden by yf.
     Retrieve prices for symbols from yahoo and computes returns based on adjusted closing prices
@@ -70,7 +70,7 @@ def get_symbol_returns_from_yahoo(symbol: str, startdate=None, enddate=None):
         End date of time period to retrieve
     :return: pandas.DataFrame
         Returns of symbol in requested period.
-    '''
+    """
 
     try:
         px = pdr.get_data_yahoo(symbol, start=startdate, end=enddate)
@@ -158,49 +158,47 @@ def get_pricedata_yfinance(ticker: str, startdate: str, enddate: dt.datetime):
     return data
 
 
-def stock_info(symbol: str):
+def get_dividends(ticker):
+    """
+
+    :param ticker:
+    :return:
+    """
+    data = yf.Ticker(ticker)
+    divs = data.dividends
+    return divs
+
+
+def get_stock_info(ticker):
     """
     Nutzt einige Features von yfinance, die als Listen oder dicts returned werden
+    :param ticker:
     :param symbol: any ticker - direkt als string in Funktion eintragen oder oben Variable deklarieren
     :return: object, info, calendar, earnings, news
     """
-    obj = yf.Ticker(symbol)
-
+    data = yf.Ticker(ticker)
     # get stock info
-    info = obj.info
+    info = data.info
 
-    # show next event (earnings, etc)
-    calendar = obj.calendar
+    return info
 
-    # Show future and historic earnings dates, returns at most next 4 quarters and last 8 quarters by default.
-    # Note: If more are needed use obj.get_earnings_dates(limit=XX) with increased limit argument.
-    earnings = obj.earnings_dates
 
-    # show news
-    news = obj.news
+def multi_tickers():
+    tickers = yf.Tickers('msft aapl de')
 
-    # get historical market data
-    hist = obj.history(period="1y")
-
-    # show meta information about the history (requires history() to be called first)
-    hist_metadata = obj.history_metadata
-
-    return obj, info, calendar, earnings, news, hist, hist_metadata
+    # access each ticker using (example)
+    info = tickers.tickers['MSFT'].info
+    history = tickers.tickers['AAPL'].history(period="1mo")
+    actions = tickers.tickers['DE'].actions
+    print(info)
+    print(history)
+    print(actions)
 
 
 if __name__ == '__main__':
-    obj = yf.Ticker('DE')
-    print(obj)
-    print(obj.info)
-    #df = get_pricedata(tickers, start, end)
-    #print(df)
 
-    #df_yf = get_pricedata_yfinance(tickers_yf, start, end)
-    #print(df_yf)
-    #print(df_yf.index)
-
-    #obj, info, calendar, earnings, news, hist, hist_metadata = stock_info('DE')
-    #print(obj)
-
-    #df = get_symbol_returns_from_yahoo(tickers_yf, start, end)
-    #print(df)
+    print(get_dividends('DE'))
+    print(get_stock_info('DE'))
+    print(get_dividends('CTRA'))
+    print(get_stock_info('CTRA'))
+    multi_tickers()

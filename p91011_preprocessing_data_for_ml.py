@@ -36,7 +36,7 @@ from tqdm import tqdm
 # dictionary-subclass for counting many objects at once:
 from collections import Counter
 
-from p1add_pricedata_to_database import push_df_to_db, pull_df_from_db
+from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
 import p8_sp500_correlation_table as p8
 
 yf.pdr_override()
@@ -73,7 +73,7 @@ def process_data_for_labels(ticker: str):
             'In case of pull DB fails due to connection: {}, falling back to backup sp500_joined_closes.csv '.format(e),
             UserWarning
         )
-        df = pd.read_csv('sp500_joined_closes.csv', index_col=0) # for default, try except einbauen :-)
+        df = pd.read_csv('sp500_joined_closes.csv', index_col=0)
 
     tickers = df.columns.values.tolist()
     # print('Liste aus func "process_data_for_labels": ',tickers)
@@ -110,6 +110,10 @@ def buy_sell_hold(*args):
     :param args:
     :return:
     """
+
+    # what follows is a list comprehension: we create a new list of c's out of the -unknown- number of c's in args
+    # using this way, I can decide in the function extract_featuresets how many arguments I pass; 1 - 7 days, it's
+    # up to you :-)
     cols = [c for c in args]
     # set for test purposes on 5 - 10 percent so that you can see unreal exxagerated results - visibility is better
     # default in tutorial: 2 percent
@@ -142,6 +146,8 @@ def extract_featuresets(ticker):
 
     tickers, df = process_data_for_labels(ticker)
 
+    # Note: The first argument to map() is a function object, which means that you need to pass a function
+    # without calling it. That is, without using a pair of parentheses.
     df['{}_target'.format(ticker)] = list(map(buy_sell_hold,
                                               df['{}_1d'.format(ticker)],
                                               df['{}_2d'.format(ticker)],
@@ -156,10 +162,13 @@ def extract_featuresets(ticker):
     #print(type(df['{}_target'.format(ticker)]))
     #stop = input('...')
     vals = df['{}_target'.format(ticker)].values.tolist()
+
+    # we use list-comprehension:
     str_vals = [str(i) for i in vals]
     print('')
     print('Results for: ', ticker)
     print('Data spread:', Counter(str_vals))
+    counted_vals = Counter(str_vals)
 
     df.fillna(0, inplace=True)
     df = df.replace([np.inf, -np.inf], np.nan)
@@ -177,13 +186,16 @@ def extract_featuresets(ticker):
 
     # push_df_to_db(df, 'featuresets_'+ticker) #Todo: ach du scheiße, ich habe p12 gestartet und mir hat es alle featuresets in die DB geschrieben ;-)
 
-    return X, y, df, ticker
+    return X, y, df, ticker, str_vals, counted_vals
 
 
 if __name__ == '__main__':
     print(process_data_for_labels('DE'))
-    X, y, df, ticker = extract_featuresets('DE')
-    print('X: ', X, 'y: ', y)
-    print('')
+    tickers, df_tail_20 = process_data_for_labels('DE')
+    print(df_tail_20.tail(20))
+    X, y, df, ticker, str_vals, counted_vals = extract_featuresets('DE')
+    #print('X: ', X, 'y: ', y)
+    #print('')
+    #print(df)
+    push_df_to_db_replace(df, 'featuresets_' + ticker)
     print(df)
-    push_df_to_db(df, 'featuresets_' + ticker)

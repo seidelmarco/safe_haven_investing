@@ -443,7 +443,7 @@ def get_yahoo_ohlc_commodities():
 
         # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
         df.rename(columns={'Adj Close': ticker + '_Adj_Close',
-                           'Open': ticker + '_Adj_Close',
+                           'Open': ticker + '_Open',
                            'High': ticker + '_High',
                            'Low': ticker + '_Low',
                            'Close': ticker + '_Close',
@@ -461,7 +461,7 @@ def get_yahoo_ohlc_commodities():
     return main_df
 
 
-def push_df_to_db(df, tablename: str):
+def push_df_to_db_append(df, tablename: str):
     """
     You can use talk_to_me() or connect()
     :tablename: str
@@ -474,7 +474,25 @@ def push_df_to_db(df, tablename: str):
 
     engine = sqlengine()
 
+    # Todo: how to inherit if_exists to push_df_to_db-function?
     df.to_sql(tablename, con=engine, if_exists='append', chunksize=100)
+
+
+def push_df_to_db_replace(df, tablename: str):
+    """
+    You can use talk_to_me() or connect()
+    :tablename: str
+    :return:
+    """
+
+    # talk_to_me()
+
+    connect()
+
+    engine = sqlengine()
+
+    # Todo: how to inherit if_exists to push_df_to_db-function?
+    df.to_sql(tablename, con=engine, if_exists='replace', chunksize=100)
 
 
 def pull_df_from_db(sql='sp500_adjclose'):
@@ -502,21 +520,21 @@ def pull_df_from_db(sql='sp500_adjclose'):
 if __name__ == '__main__':
     ohlc_attr_input = input('OHLC-Attribut: ')
     # Todo: here still build in sysvar for command line prompt via calling the file without IDE
-    #sp500_df_lastday_per_attr = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
-    #push_df_to_db(sp500_df_lastday_per_attr, tablename='sp500_'+ohlc_attr_input)
+    sp500_df_lastday_per_attr = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+    push_df_to_db_append(sp500_df_lastday_per_attr, tablename='sp500_'+ohlc_attr_input)
 
     #sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
     #push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
 
-    #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
-    #print(df)
-
-    sp500_df_per_attr_lastday = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
-    push_df_to_db(sp500_df_per_attr_lastday, tablename='sp500_' + ohlc_attr_input)
-
-    df = pull_df_from_db(sql='sp500_' + ohlc_attr_input)
+    df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
     print(df)
+
+    #sp500_df_per_attr_lastday = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+    #push_df_to_db(sp500_df_per_attr_lastday, tablename='sp500_' + ohlc_attr_input)
+
+    #df = pull_df_from_db(sql='sp500_' + ohlc_attr_input)
+    #print(df)
 
     #commodities_ohlc = get_yahoo_ohlc_commodities()
     #push_df_to_db(commodities_ohlc, tablename='commodities_ohlc')

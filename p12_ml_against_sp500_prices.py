@@ -45,7 +45,13 @@ def do_ml(ticker, use_knn=False):
     :return:
     """
 
-    X, y, df, ticker = extract_featuresets(ticker)
+    # Todo: wenn ich es richtig verstanden habe, trainiert unser Modell für jeden Tag; es schaut also ob nach einem \n
+    # Todo: Tag sich der Preis um 2% verschoben hat, als auch nach 7 Tagen für das 7-Tage Intervall: es könnte also für
+    # Todo: Tag 1 eine -1 geben aber für Tag 7 eine 1 als Label, Target, weil die Aktie von Tag 6 bis 7 um 2%
+    # Todo gestiegen ist. Wäre es aber nicht besser, immer nur für ein Intervall trainieren zu lassen, also, dass
+    # Todo: ich nur für  _d5 (Handelswoche) auf das Target mappen map() lasse? Todo: zweite Funktion schreiben....
+
+    X, y, df, ticker, str_vals, counted_vals = extract_featuresets(ticker)
 
     # We've got our featuresets and labels, now we want to shuffle them up, train, and then test:
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
@@ -84,8 +90,8 @@ def do_ml(ticker, use_knn=False):
     predictions = clf.predict(X_test)
     print('predicted class counts:', Counter(predictions))
     print()
-    return confidence   # das hatte ich zuerst vergessen - wenn nichts returned wird, kann man die Funktion zwar
-                        # aufrufen, in einer assigneden Variable wird aber nichts gespeichert
+    return confidence, predictions   # das hatte ich zuerst vergessen - wenn nichts returned wird, kann man die Funktion zwar
+                                    # aufrufen, in einer assigneden Variable wird aber nichts gespeichert
 
 
 def do_ml_allsp500():
@@ -107,7 +113,7 @@ def do_ml_allsp500():
             time.sleep(2)
 
         try:
-            accuracy = do_ml(ticker, use_knn=False)
+            accuracy, predictions = do_ml(ticker, use_knn=False)
         except ValueError as e:
             warnings.warn(
                 'Wahrscheinlich nicht min 2 labels vorhanden: {}'.format(e), UserWarning)
@@ -126,7 +132,6 @@ def do_ml_allsp500():
             main_df = main_df.join(df, how='outer')
 
     print('Average accuracy: ', mean(accuracies))
-    print(df)
     return main_df
 
     # Todo: build main_df for accuracy and predictions of sp500_ticker
