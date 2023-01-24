@@ -50,9 +50,6 @@ def fmp_company_profile():
     amending the stock-price-predictions
     https://financialmodelingprep.com/api/v3/profile/AAPL?apikey=YOUR_API_KEY
 
-    Debugging: there is an odd mistake: pd.DataFrame.from_dict reads the json-String and returns a dataframe
-    but the type is still string. So we won't be able to use the append-method later on. Better we us some Pandas
-    read json methods...
     :return:
     """
 
@@ -70,7 +67,7 @@ def fmp_company_profile():
     for i in tqdm(tickers):
         i.upper()
 
-        api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?apikey=d8285415cbc592b214ce8ffa2b376c23'
+        api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i
         data_profile = get_jsonparsed_data(api_profile_url)
         print(data_profile)
         #stopp = input('... hit Enter')
@@ -81,8 +78,6 @@ def fmp_company_profile():
         df['divyield'] = (df['lastDiv'] / df['price'])*100
         print(df)
         print(type(df)) # <class 'pandas.core.frame.DataFrame'>
-        #print('Bis hierin läuft alles; 2 DF - aber jetzt wird nichts zusammengefügt....')
-        #stopp = input('... hit Enter')
 
         df_list.append(df)
     final_df = pd.concat(df_list, axis=0, join='outer')

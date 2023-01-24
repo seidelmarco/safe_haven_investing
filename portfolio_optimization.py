@@ -577,7 +577,7 @@ for i in tqdm.tqdm(tickers):
 
     i.upper()
 
-    api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?apikey=d8285415cbc592b214ce8ffa2b376c23'
+    api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?
     data_profile = get_jsonparsed_data(api_profile_url)
     data = pd.Series(data_profile[0])
     df1[i] = data
