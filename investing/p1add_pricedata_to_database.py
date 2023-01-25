@@ -55,7 +55,7 @@ def get_yahoo_sp500_ohlc(ohlc_attr: str = 'adjclose', reload_sp500=False):
 
     main_df = pd.DataFrame()
 
-    # only for testing, for speed and performance reasons just test with one ticker-symbol:
+    # only for testing, for speed and performance reasons just investing with one ticker-symbol:
     # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY']
     for count, ticker in enumerate(tqdm(tickers)):
         # just in case your connection breaks, we'd like to save our progress!
@@ -131,7 +131,7 @@ def get_yahoo_sp500_adjclose(reload_sp500=False):
 
     main_df = pd.DataFrame()
 
-    # only for testing, for speed and performance reasons just test with one ticker-symbol:
+    # only for testing, for speed and performance reasons just investing with one ticker-symbol:
     # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY']
     for count, ticker in enumerate(tqdm(tickers)):
         # just in case your connection breaks, we'd like to save our progress!
@@ -200,7 +200,7 @@ def get_sp500_ohlc_today(ohlc_attr: str = 'adjclose', reload_sp500=False):
 
     main_df = pd.DataFrame()
 
-    # only for testing, for speed and performance reasons just test with one ticker-symbol:
+    # only for testing, for speed and performance reasons just investing with one ticker-symbol:
     # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY']
     for count, ticker in enumerate(tqdm(tickers)):
         # just in case your connection breaks, we'd like to save our progress!
@@ -350,7 +350,7 @@ def get_selection_ohlc_today():
 
     main_df = pd.DataFrame()
 
-    # only for testing, for speed and performance reasons just test with one ticker-symbol:
+    # only for testing, for speed and performance reasons just investing with one ticker-symbol:
     # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY']
     for count, ticker in enumerate(tqdm(tickers)):
         # just in case your connection breaks, we'd like to save our progress!

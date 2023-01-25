@@ -53,7 +53,7 @@ def do_ml(ticker, use_knn=False):
 
     X, y, df, ticker, str_vals, counted_vals = extract_featuresets(ticker)
 
-    # We've got our featuresets and labels, now we want to shuffle them up, train, and then test:
+    # We've got our featuresets and labels, now we want to shuffle them up, train, and then investing:
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
 
     # metrics = get_scorer_names()

@@ -115,7 +115,7 @@ def buy_sell_hold(*args):
     # using this way, I can decide in the function extract_featuresets how many arguments I pass; 1 - 7 days, it's
     # up to you :-)
     cols = [c for c in args]
-    # set for test purposes on 5 - 10 percent so that you can see unreal exxagerated results - visibility is better
+    # set for investing purposes on 5 - 10 percent so that you can see unreal exxagerated results - visibility is better
     # default in tutorial: 2 percent
     requirement = 0.03
     for col in cols:

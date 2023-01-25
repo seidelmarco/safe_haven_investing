@@ -4,19 +4,12 @@ import json
 import ssl
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-import cvxopt as opt
-from cvxopt import blas, solvers
 import pandas as pd
-import openpyxl
-import plotly
-import cufflinks
 import pandas_datareader as web
 from pandas.api.types import CategoricalDtype
 import tqdm
 # Bsp. für alle Schleifen/Iterables:
 # sharpe_ratios, wghts = np.column_stack([sharpe_ratios_and_weights(returns) for x in tqdm(range(n))])
-import time
 from datetime import datetime
 from myutils import timestamp
 import hidden
