@@ -1,0 +1,1 @@
+SELECT * FROM public.sp500_predicted_buys
