@@ -19,6 +19,7 @@ import tqdm
 import time
 from datetime import datetime
 from myutils import timestamp
+import hidden
 
 # pd.set_option("display.max.columns", None)
 
@@ -569,6 +570,7 @@ df1 = pd.DataFrame()
 stocks = pd.read_excel('Group_4_BBB.xlsx')
 tickers = list(stocks['Symbol'])
 
+key = hidden.secrets_fmp()
 # For each ticker in the previous list, create a loop to query the data and store it in the previously
 # created data frame
 
@@ -577,7 +579,7 @@ for i in tqdm.tqdm(tickers):
 
     i.upper()
 
-    api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?
+    api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?apikey='+ key
     data_profile = get_jsonparsed_data(api_profile_url)
     data = pd.Series(data_profile[0])
     df1[i] = data

@@ -15,6 +15,7 @@ from myutils import timestamp
 
 import pickle
 from collections import Counter
+import hidden
 
 from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
 
@@ -62,12 +63,13 @@ def fmp_company_profile():
     print(f'Die Ticker zum Testen sind: {tickers}')
     stopp = input('... hit Enter')
 
+    key = hidden.secrets_fmp()
     df_list = []
 
     for i in tqdm(tickers):
         i.upper()
 
-        api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i
+        api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?apikey='+key
         data_profile = get_jsonparsed_data(api_profile_url)
         print(data_profile)
         #stopp = input('... hit Enter')

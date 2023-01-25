@@ -212,10 +212,6 @@ def get_sp500_ohlc_today(ohlc_attr: str = 'adjclose', reload_sp500=False):
                 UserWarning)
             # fetching data for multiple tickers:
             df = yf.download(ticker, start=startdate, end=enddate)
-        # print(df)
-        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist
-        # df = data.set_index('Date', inplace=True)
-        # print(df.index)
 
         match ohlc_attr:
             case 'open':
@@ -244,6 +240,13 @@ def get_sp500_ohlc_today(ohlc_attr: str = 'adjclose', reload_sp500=False):
 
         if count % 10 == 0:
             print(count)
+    # Todo in all requests: https://stackoverflow.com/questions/61802080/
+    #  excelwriter-valueerror-excel-does-not-support-datetime-with-timezone-when-saving
+
+    main_df.reset_index(inplace=True)
+    main_df['Date'] = main_df['Date'].dt.tz_localize(None)
+    main_df.set_index('Date', inplace=True)
+    # print(main_df.index)
 
     main_df.to_excel('sp500_dfs/sp500_lastday_' + ohlc_attr + '.xlsx', engine='openpyxl')
     return main_df
