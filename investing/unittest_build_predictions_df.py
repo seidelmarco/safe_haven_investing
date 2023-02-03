@@ -23,6 +23,7 @@ import yfinance as yf
 import pickle
 import requests
 from collections import Counter
+from investing.myutils import sum
 
 from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
 from p91011_preprocessing_data_for_ml import extract_featuresets
@@ -48,7 +49,8 @@ with open('sp500tickers.pickle', 'rb') as f:
 joined_frames_list = []
 #stopp = input('...')
 
-# tickers = [['DE'], ['AAPL'], ['XOM'], ['CVX']]
+#tickers_list = [['DE'], ['AAPL'], ['XOM'], ['CVX']]
+# tickers_list = [['XOM'], ['CVX'], ['BRK.B']]
 
 for count, ticker in enumerate(tqdm(tickers_list)):
 
@@ -61,6 +63,7 @@ for count, ticker in enumerate(tqdm(tickers_list)):
     df_hist = pd.DataFrame.from_dict(counted_vals, orient='index').T
     df_hist.rename(columns={'1': 'hist_buy', '-1': 'hist_sell', '0': 'hist_hold'}, inplace=True)
     df_hist['Symbol'] = ticker
+    print(df_hist)
     df_hist.set_index('Symbol', inplace=True)
 
     # the predicted data (labels) comes from do_ml
@@ -84,13 +87,15 @@ for count, ticker in enumerate(tqdm(tickers_list)):
         'Hold_predicted': do_nothing
     }
 
-    df_pred = pd.DataFrame(data, columns=['Symbol', 'Confidence', 'Buy_predicted', 'Sell_predicted', 'Hold_predicted'])
+    df_pred = pd.DataFrame(data, columns=['Symbol', 'Confidence', 'Buy_predicted', 'Sell_predicted',
+                                          'Hold_predicted'])
 
     df_pred.set_index('Symbol', inplace=True)
 
     frames = [df_hist, df_pred]
     joined_frame = pd.concat(frames, axis=1, join='outer')
-    #print(joined_frame)
+    joined_frame['Summe hist'] = joined_frame['hist_buy'] + joined_frame['hist_sell'] + joined_frame['hist_hold']
+    # print(joined_frame)
     joined_frames_list.append(joined_frame)
 
 main_df = pd.concat(joined_frames_list, axis=0, join='outer')
@@ -99,6 +104,8 @@ print('')
 print("""
 *************************
 Das sollte mein Endergebnis sein:
+
+aus irgendeinem Grund löscht es die DF wie BRK.B raus - das ist momentan gut aber könnte später zu Problemem führen!
 ***********************++
 """)
 main_df_sorted = main_df.sort_values(by='Buy_predicted', ascending=False)

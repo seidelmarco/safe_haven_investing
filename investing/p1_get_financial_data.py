@@ -169,20 +169,6 @@ def get_dividends(ticker):
     return divs
 
 
-def get_stock_info(ticker):
-    """
-    Nutzt einige Features von yfinance, die als Listen oder dicts returned werden
-    :param ticker:
-    :param symbol: any ticker - direkt als string in Funktion eintragen oder oben Variable deklarieren
-    :return: object, info, calendar, earnings, news
-    """
-    data = yf.Ticker(ticker)
-    # get stock info
-    info = data.info
-
-    return info
-
-
 def multi_tickers():
     tickers = yf.Tickers('msft aapl de')
 
@@ -197,8 +183,7 @@ def multi_tickers():
 
 if __name__ == '__main__':
 
-    print(get_dividends('DE'))
-    print(get_stock_info('DE'))
-    print(get_dividends('CTRA'))
-    print(get_stock_info('CTRA'))
+    #print(get_dividends('DE'))
+
+    #print(get_dividends('CTRA'))
     multi_tickers()
