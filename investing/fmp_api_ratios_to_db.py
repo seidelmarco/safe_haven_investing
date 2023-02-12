@@ -2,6 +2,7 @@ from urllib.request import Request, urlopen
 import json
 import ssl
 import numpy as np
+import os
 
 import pandas as pd
 import openpyxl
@@ -11,11 +12,13 @@ from tqdm import tqdm
 # sharpe_ratios, wghts = np.column_stack([sharpe_ratios_and_weights(returns) for x in tqdm(range(n))])
 import time
 from datetime import datetime
-from myutils import timestamp
+from myutils import timestamp, tickers_list
 
 import pickle
 from collections import Counter
 import hidden
+
+from p5_get_sp500_list import save_sp500_tickers
 
 from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
 
@@ -45,20 +48,26 @@ def get_jsonparsed_data(url):
     return json.loads(data)
 
 
-def fmp_company_profile():
+def fmp_ratios(reload_sp500 = False):
     """
-    Objective: daily updated table with the most important company infos and keymetrics on hand for
-    amending the stock-price-predictions
-    https://financialmodelingprep.com/api/v3/profile/AAPL?apikey=YOUR_API_KEY
 
     :return:
     """
 
+    if reload_sp500 is True:
+        tickers = save_sp500_tickers()
+    else:
+        with open('sp500tickers.pickle', 'rb') as f:
+            tickers = pickle.load(f)
+            print(tickers)
+
+    if not os.path.exists('sp500_dfs'):
+        os.makedirs('sp500_dfs')
+
     # for testing - just few tickers:
     # best would be to create a table for the selection for that I can populate the table from my Django-admin-panel
     # Caution! No stocks from outside USA! Keep in mind by designing your collection.
-    tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY', 'MTNOY', 'BLDP', 'KO', 'DLTR',
-               'XOM', 'JNJ', 'KHC', 'MKC', 'MSFT', 'OGN', 'SKT', 'TDG', 'CTRA']
+    tickers = tickers_list()
     #tickers = ['DE', 'CTRA']
     print(f'Die Ticker zum Testen sind: {tickers}')
     stopp = input('... hit Enter')
@@ -69,22 +78,23 @@ def fmp_company_profile():
     for i in tqdm(tickers):
         i.upper()
 
-        api_profile_url = 'https://financialmodelingprep.com/api/v3/profile/' + i + '?apikey='+key
-        data_profile = get_jsonparsed_data(api_profile_url)
-        print(data_profile)
-        #stopp = input('... hit Enter')
+        ratios_url = 'https://financialmodelingprep.com/api/v3/ratios/' + i + '?apikey=' + key
+        data_ratios_url = get_jsonparsed_data(ratios_url)
+        ratios_url_dict_21 = data_ratios_url[0]
+        print(ratios_url_dict_21)
+        # stopp = input('... hit Enter')
 
         # By default the keys of the dict become the DataFrame columns:
-        df = pd.DataFrame.from_dict(data_profile)
+        df = pd.DataFrame.from_dict(data_ratios_url)
         df.set_index('symbol', inplace=True)
-        df['divyield'] = (df['lastDiv'] / df['price'])*100
         print(df)
-        print(type(df)) # <class 'pandas.core.frame.DataFrame'>
+        print(type(df))  # <class 'pandas.core.frame.DataFrame'>
 
         df_list.append(df)
     final_df = pd.concat(df_list, axis=0, join='outer')
 
     return final_df
+
 
 '''
 Example for concat:
@@ -98,13 +108,13 @@ final_data_day = pd.concat(data_day_list)
 '''
 
 if __name__ == '__main__':
-    main_df = fmp_company_profile()
+    main_df = fmp_ratios()
     print(main_df)
     print(type(main_df))
-    push_df_to_db_replace(main_df, 'company_keyfacts_selection')
-    # Todo: don't work due to parse dates in pull_df....
-    # df = pull_df_from_db(sql='company_keyfacts_selection')
+    push_df_to_db_replace(main_df, 'fmp_ratios')
+    # Todo: doesn't work due to parse dates in pull_df....
+    # df = pull_df_from_db(sql='fmp_ratios')
     # print(df)
-    main_df_sorted = main_df.sort_values(by='divyield', ascending=False)
-    print(main_df_sorted.head(30))
-
+    #main_df_sorted = main_df.sort_values(by='dividendYield', ascending=False)
+    # ist eigentlich Quatsch, weil es mir jetzt die Quartale nach divyield sortiert und die ticker durchwirbelt
+    #print(main_df_sorted.head(30))

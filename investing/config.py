@@ -26,5 +26,5 @@ def config(filename='database.ini', section='postgresql'):
 
 
 if __name__ == '__main__':
-    print(config())
+    print(config(section='pg4e'))
 

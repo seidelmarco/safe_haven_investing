@@ -41,8 +41,7 @@ def get_stock_info(reload_sp500=False):
             print(info)
         except Exception as e:
             warnings.warn(
-                # f'{ticker}: No summary info found, symbol may be delisted {e}',
-                '{}: No summary info found, symbol may be delisted {}'.format(ticker, e),
+                f'{ticker}: No summary info found, symbol may be delisted {e}',
                 UserWarning)
             continue
         df = pd.DataFrame.from_dict(info, orient='index').transpose()

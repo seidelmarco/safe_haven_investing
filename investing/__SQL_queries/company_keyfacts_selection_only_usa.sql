@@ -1,2 +1,2 @@
-SELECT "symbol", "divyield", "dcf", "dcfDiff", "sector", * FROM public.company_keyfacts_selection
+SELECT "symbol", "divyield", "dcf", "dcfDiff", "sector", * FROM public.fmp_company_profile_keyfacts
 ORDER BY "divyield" DESC;

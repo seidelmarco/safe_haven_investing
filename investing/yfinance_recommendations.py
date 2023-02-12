@@ -43,6 +43,39 @@ def analysts_recommendations(reload_sp500=False):
         print(f'Recomm. summary: {recommendations_summary}')
         print(f'Price targets: {analyst_price_target}')
 
+        # CALL THE MULTIPLE FUNCTIONS AVAILABLE AND STORE THEM IN VARIABLES.
+        actions = data.get_actions()
+        balance = data.get_balance_sheet()
+        calendar = data.get_calendar()
+        cf = data.get_cashflow()
+        info = data.get_info()
+        inst_holders = data.get_institutional_holders()
+        news = data.get_news()
+        recommendations = data.get_recommendations()
+        sustainability = data.get_sustainability()
+
+        # PRINT THE RESULTS
+        print('*' * 20)
+        print(f'Actions: {actions}')
+        print('*' * 20)
+
+        print(balance)
+        print('*' * 20)
+        print(calendar)
+        print('*' * 20)
+        print(cf)
+        print('*' * 20)
+        print(info)
+        print('*' * 20)
+        print(inst_holders)
+        print('*' * 20)
+        print(news)
+        print('*' * 20)
+        print(recommendations)
+        print('*' * 20)
+        print(sustainability)
+        print('*' * 20)
+
 
 if __name__ == '__main__':
     analysts_recommendations()

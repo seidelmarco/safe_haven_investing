@@ -165,14 +165,16 @@ if __name__ == '__main__':
     # plt.plot(df2['Date'], df2['norm'])
     # plt.plot(df3['Date'], df3['norm'])
     plt.plot(df6['Date'], df6['norm'])
+    plt.legend([ticker5[0], ticker6[0]], loc='upper left')
 
     plt.show()
 
     plt.style.use('fivethirtyeight')
     plt.figure(figsize=(15, 5))
-    plt.title(f'Normalized price chart {ticker5[0]}  {ticker6[0]}')
+    plt.title(f'Normalized price chart {tickers[0]}  {ticker6[0]}')
 
     plt.plot(df['Date'], df['norm'])
     plt.plot(df6['Date'], df6['norm'])
+    plt.legend([tickers[0], ticker6[0]], loc='upper left')
 
     plt.show()
