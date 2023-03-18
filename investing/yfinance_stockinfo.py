@@ -11,6 +11,7 @@ import yfinance as yf
 from tqdm import tqdm
 
 from p5_get_sp500_list import save_sp500_tickers
+from p5_2_get_eurostoxx50_list import save_eurostoxx50_tickers
 
 from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
 
@@ -39,17 +40,17 @@ def get_stock_info(reload_sp500=False):
         try:
             info = data.info
             print(info)
+            df = pd.DataFrame.from_dict(info, orient='index').transpose()
+            df.reset_index(inplace=True)
+            df['Symbol'] = ticker
+            df.set_index('Symbol', inplace=True)
+            # print(df)
+            df_list.append(df)
         except Exception as e:
             warnings.warn(
                 f'{ticker}: No summary info found, symbol may be delisted {e}',
                 UserWarning)
             continue
-        df = pd.DataFrame.from_dict(info, orient='index').transpose()
-        df.reset_index(inplace=True)
-        df['Symbol'] = ticker
-        df.set_index('Symbol', inplace=True)
-        #print(df)
-        df_list.append(df)
 
         if count % 10 == 0:
             print(count)
@@ -94,24 +95,61 @@ def get_stock_fast_info(reload_sp500=False):
             print(count)
 
 
-def get_stock_info_europe():
+def get_stock_info_europe(reload_euro50=False):
     """
 
 
     :return:
     """
 
+    if reload_euro50 is True:
+        tickers = save_eurostoxx50_tickers()
+    else:
+        with open('eurostoxx50tickers.pickle', 'rb') as f:
+            tickers = pickle.load(f)
+            print(tickers)
+
     tickers = ['BAS.DE']
     df_list = []
 
+    for count, ticker in enumerate(tqdm(tickers)):
+        data = yf.Ticker(ticker)
+        # get stock info
+        """ Ideas for building-up the dataframe"""
+        try:
+            info = data.info
+            print(info)
+            df = pd.DataFrame.from_dict(info, orient='index').transpose()
+            df.reset_index(inplace=True)
+            df['Symbol'] = ticker
+            df.set_index('Symbol', inplace=True)
+            # print(df)
+            df_list.append(df)
+        except Exception as e:
+            warnings.warn(
+                f'{ticker}: No summary info found, symbol may be delisted {e}',
+                UserWarning)
+            continue
+
+        if count % 10 == 0:
+            print(count)
+
+    final_df = pd.concat(df_list, axis=0, join='outer')
+    return final_df
+
 
 if __name__ == '__main__':
+    """
     df = get_stock_info()
     push_df_to_db_replace(df, 'sp500_stockinfo')
     print(df)
     df_basic = get_stock_fast_info()
     #push_df_to_db_replace(df_basic, 'sp500_basicinfo')
     print(df_basic)
+    """
+    df_europe = get_stock_info_europe()
+    push_df_to_db_replace(df_europe, 'euro50_stockinfo')
+
     #data = yf.Ticker('DE')
     #print(data.info)
     # get stock basic info

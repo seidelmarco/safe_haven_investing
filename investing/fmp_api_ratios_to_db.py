@@ -22,6 +22,8 @@ from p5_get_sp500_list import save_sp500_tickers
 
 from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
 
+from build_custom_df import pull_df_wo_dates_from_db
+
 pd.set_option("display.max.columns", None)
 
 
@@ -112,9 +114,6 @@ if __name__ == '__main__':
     print(main_df)
     print(type(main_df))
     push_df_to_db_replace(main_df, 'fmp_ratios')
-    # Todo: doesn't work due to parse dates in pull_df....
-    # df = pull_df_from_db(sql='fmp_ratios')
-    # print(df)
-    #main_df_sorted = main_df.sort_values(by='dividendYield', ascending=False)
-    # ist eigentlich Quatsch, weil es mir jetzt die Quartale nach divyield sortiert und die ticker durchwirbelt
-    #print(main_df_sorted.head(30))
+
+    df_fmp_ratios = pull_df_wo_dates_from_db(sql='fmp_ratios')
+    print(df_fmp_ratios)

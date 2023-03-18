@@ -11,13 +11,15 @@ from tqdm import tqdm
 # sharpe_ratios, wghts = np.column_stack([sharpe_ratios_and_weights(returns) for x in tqdm(range(n))])
 import time
 from datetime import datetime
-from myutils import timestamp, tickers_list
+from myutils import timestamp, tickers_list, tickers_list_africa, tickers_list_europe
 
 import pickle
 from collections import Counter
 import hidden
 
 from p1add_pricedata_to_database import push_df_to_db_replace, push_df_to_db_append, pull_df_from_db
+
+from build_custom_df import pull_df_wo_dates_from_db
 
 pd.set_option("display.max.columns", None)
 
@@ -58,6 +60,8 @@ def fmp_company_profile():
     # best would be to create a table for the selection for that I can populate the table from my Django-admin-panel
     # Caution! No stocks from outside USA! Keep in mind by designing your collection.
     tickers = tickers_list()
+    tickers = tickers_list_europe()
+    tickers = tickers_list_africa()
     #tickers = ['DE', 'CTRA']
     print(f'Die Ticker zum Testen sind: {tickers}')
     stopp = input('... hit Enter')
@@ -100,10 +104,12 @@ if __name__ == '__main__':
     main_df = fmp_company_profile()
     print(main_df)
     print(type(main_df))
-    push_df_to_db_replace(main_df, 'fmp_company_profile_keyfacts')
-    # Todo: doesn't work due to parse dates in pull_df....
-    # df = pull_df_from_db(sql='fmp_company_profile_keyfacts')
-    # print(df)
+    # push_df_to_db_replace(main_df, 'fmp_company_profile_keyfacts')
+    push_df_to_db_replace(main_df, 'fmp_company_profile_keyfacts_africa')
+
+    df_fmp_profile = pull_df_wo_dates_from_db(sql='fmp_company_profile_keyfacts_africa')
+    print(df_fmp_profile)
+
     main_df_sorted = main_df.sort_values(by='divyield', ascending=False)
     print(main_df_sorted.head(30))
 

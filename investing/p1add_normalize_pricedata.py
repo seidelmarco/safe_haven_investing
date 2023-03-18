@@ -64,7 +64,8 @@ def normalize_data(df):
     """
     df on input should contain only one column with the price data (plus dataframe index)
     :param df:
-    :return:
+    :return: y will be a new column in a dataframe - we will call it 'norm' like so:
+    df['norm'] = normalize_data(df['Adj Close'])
     """
     min = df.min()
     max = df.max()
@@ -79,7 +80,8 @@ def normalize_pricedata(df_1col) -> float:
     """
     df on input should contain only one column with the price data (plus dataframe index)
     :param df_1col:
-    :return: y will be a new column in a dataframe - we will call it 'norm'
+    :return: y will be a new column in a dataframe - we will call it 'norm' like so:
+    df['norm'] = normalize_data(df['Adj Close'])
     """
     min = df_1col.min()
     max = df_1col.max()

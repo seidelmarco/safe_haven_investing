@@ -14,8 +14,12 @@ from matplotlib import style
 import pandas as pd
 import pandas_datareader.data as pdr
 
+from tqdm import tqdm
+from myutils import push_df_to_db_replace, flatten
+
 import yfinance as yf
 yf.pdr_override()
+
 
 '''
 Konfigurationen
@@ -49,10 +53,17 @@ def get_pricedata(symbols: list, startdate: str, enddate: dt.datetime) -> str:
     try:
         # download panel data
         dataframe = pdr.get_data_yahoo(symbols, start=startdate, end=enddate)
+
     except Exception as e:
-        print('type error: ', str(e))
-        time.sleep(5)
+        warnings.warn(
+            'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+            UserWarning)
+        # fetching data for multiple tickers:
+        dataframe = yf.download(symbols, start=startdate, end=enddate)
+
+    finally:
         pass
+
     return dataframe
 
 
@@ -65,15 +76,15 @@ def get_symbol_returns_from_yahoo(symbol: str, startdate=None, enddate=None):
     :param symbol: str,
         Symbol name to load, e.g. 'SPY'
     :param startdate: pandas.Timestamp compatible, optional
-        Start date of time period to retrieve
+        Start date of time period to retrieve - STRING!
     :param enddate: pandas.Timestamp compatible, optional
-        End date of time period to retrieve
+        End date of time period to retrieve - STRING!
     :return: pandas.DataFrame
         Returns of symbol in requested period.
     """
 
     try:
-        px = pdr.get_data_yahoo(symbol, start=startdate, end=enddate)
+        df = pdr.get_data_yahoo(symbol, start=startdate, end=enddate)
         # was macht das pd.to_datetime??? Das funzt nicht...
         '''
         Pandas to_datetime() method helps to convert string Date time into Python Date time object.
@@ -86,15 +97,15 @@ def get_symbol_returns_from_yahoo(symbol: str, startdate=None, enddate=None):
         # display
         data
         '''
-        #px['Date'] = pd.to_datetime(px['Date'])
-        #px.set_index('Date', drop=False, inplace=True)
-        returns = px[['Adj Close']].pct_change().dropna()
+        #df['Date'] = pd.to_datetime(df['Date'])
+        #df.set_index('Date', drop=False, inplace=True)
+        returns = df[['Adj Close']].pct_change().dropna()
     except Exception as e:
         warnings.warn(
             'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
             UserWarning)
-        px = yf.download(symbol, start=startdate, end=enddate)
-        returns = px[['Adj Close']].pct_change().dropna()
+        df = yf.download(symbol, start=startdate, end=enddate)
+        returns = df[['Adj Close']].pct_change().dropna()
 
     returns.index = returns.index.tz_localize("UTC")
     returns.columns = [symbol]
@@ -181,9 +192,61 @@ def multi_tickers():
     print(actions)
 
 
+def get_currency_pairs():
+    """
+
+    :return: main_df with rates
+    """
+    # excel to dataframe und dann tickers-list....
+
+    with open('sp500_dfs/currency_pairs.xlsx', 'rb') as f:
+        tickers_col = pd.read_excel(f, header=0, engine='openpyxl', usecols=[1])
+        tickers_list = tickers_col.values.tolist()
+        flat_list = flatten(tickers_list)
+        # flat_list = [item for sublist in tickers_list for item in sublist]
+
+    print(flat_list)
+
+    '''
+    Variables:
+    '''
+    startdate = '2022-01-01'  # input('Startdatum im Format YYYY-MM-DD') usecase for yfinance
+    enddate = dt.datetime.now()
+
+    joined_frames_list = []
+
+    for count, ticker in enumerate(tqdm(flat_list)):
+        try:
+            df = pdr.get_data_yahoo(ticker, startdate, enddate)
+        except Exception as e:
+            warnings.warn(
+                f'Yahoo Finance read failed: {e}, falling back to YFinance',
+                UserWarning)
+            df = yf.download(ticker, start=startdate, end=enddate)
+
+        df.rename(columns={'Adj Close': str(ticker)}, inplace=True)
+        df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+
+        #print(df)
+        #break
+
+        joined_frames_list.append(df)
+
+    main_df = pd.concat(joined_frames_list, axis=1, join='outer')
+    print(main_df)
+    return main_df
+
+
 if __name__ == '__main__':
+
+    #print(get_pricedata(tickers, startdate=start, enddate=end))
 
     #print(get_dividends('DE'))
 
     #print(get_dividends('CTRA'))
-    multi_tickers()
+    # multi_tickers()
+
+    # print(get_symbol_returns_from_yahoo('BAS.DE', startdate='2023-01-01', enddate='2023-02-13'))
+
+    get_currency_pairs()
+    push_df_to_db_replace(get_currency_pairs(), 'pricedata_curreny_pairs')

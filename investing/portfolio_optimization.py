@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import pandas_datareader as web
 from pandas.api.types import CategoricalDtype
-import tqdm
+from tqdm import tqdm
 # Bsp. für alle Schleifen/Iterables:
 # sharpe_ratios, wghts = np.column_stack([sharpe_ratios_and_weights(returns) for x in tqdm(range(n))])
 from datetime import datetime
@@ -186,7 +186,7 @@ returns_group6.set_index('Date', inplace=True)
 print(returns_group6)
 
 print('Hier müsste der Fehler auftauchen...manchmal axis out of bound, manchmal läuft es')
-means, stds = np.column_stack([returns_and_stdevs(returns_group2) for x in tqdm.tqdm(range(n))])
+means, stds = np.column_stack([returns_and_stdevs(returns_group2) for x in tqdm(range(n))])
 
 # Plot portfolios' mean daily returns and daily standard deviations previously created
 fig, ax = plt.subplots(figsize=(10, 7))
@@ -241,17 +241,17 @@ def sharpe_ratios_and_weights(varreturns):
 n = 1000
 
 sharpe_ratios1, wghts1 = np.column_stack(
-    [sharpe_ratios_and_weights(returns_group1) for x in tqdm.tqdm(range(n), colour='green')])
+    [sharpe_ratios_and_weights(returns_group1) for x in tqdm(range(n), colour='green')])
 sharpe_ratios2, wghts2 = np.column_stack(
-    [sharpe_ratios_and_weights(returns_group2) for x in tqdm.tqdm(range(n), colour='green')])
+    [sharpe_ratios_and_weights(returns_group2) for x in tqdm(range(n), colour='green')])
 sharpe_ratios3, wghts3 = np.column_stack(
-    [sharpe_ratios_and_weights(returns_group3) for x in tqdm.tqdm(range(n), colour='green')])
+    [sharpe_ratios_and_weights(returns_group3) for x in tqdm(range(n), colour='green')])
 sharpe_ratios4, wghts4 = np.column_stack(
-    [sharpe_ratios_and_weights(returns_group4) for x in tqdm.tqdm(range(n), colour='green')])
+    [sharpe_ratios_and_weights(returns_group4) for x in tqdm(range(n), colour='green')])
 sharpe_ratios5, wghts5 = np.column_stack(
-    [sharpe_ratios_and_weights(returns_group5) for x in tqdm.tqdm(range(n), colour='green')])
+    [sharpe_ratios_and_weights(returns_group5) for x in tqdm(range(n), colour='green')])
 sharpe_ratios6, wghts6 = np.column_stack(
-    [sharpe_ratios_and_weights(returns_group6) for x in tqdm.tqdm(range(n), colour='green')])
+    [sharpe_ratios_and_weights(returns_group6) for x in tqdm(range(n), colour='green')])
 
 # Find the maximum sharpe ratio
 print('')

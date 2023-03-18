@@ -1,0 +1,1 @@
+SELECT * FROM public.pricedata_curreny_pairs

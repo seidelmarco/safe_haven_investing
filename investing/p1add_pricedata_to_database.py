@@ -2,6 +2,7 @@ import os
 import sys
 from connect import connect
 from myutils import sqlengine, sqlengine_pull_from_db, talk_to_me, timestamp, timestamp_onlyday, back_to_the_future
+from myutils import tickers_list_europe, tickers_list_africa
 import pickle
 
 import datetime as dt
@@ -16,6 +17,7 @@ import pandas_datareader.data as pdr
 from tqdm import tqdm
 
 from p5_get_sp500_list import save_sp500_tickers
+from p5_2_get_eurostoxx50_list import save_eurostoxx50_tickers
 
 import yfinance as yf
 yf.pdr_override()
@@ -425,7 +427,7 @@ def get_selection_ohlc_today():
     return main_df
 
 
-def get_ohlc_selection_europe_timezone():
+def get_ohlc_selection_europe_timezone(reload_euro50=False):
     """
     I need crucially my own ticker list which is reliable due to the reasons, that there are too many unforeseen
     changes in the SP500 (like the new ticker GEHC on 2023-01-04) and I need securities which are not constituents
@@ -435,7 +437,14 @@ def get_ohlc_selection_europe_timezone():
     :param enddate:
     :return: main_df
     """
-    tickers = ['BAS.DE', 'MUV2.DE', 'NEL.OL']
+    #tickers = tickers_list_europe()
+
+    if reload_euro50 is True:
+        tickers = save_eurostoxx50_tickers()
+    else:
+        with open('eurostoxx50tickers.pickle', 'rb') as f:
+            tickers = pickle.load(f)
+            print(tickers)
 
     print(tickers)
 
@@ -445,21 +454,18 @@ def get_ohlc_selection_europe_timezone():
     '''
     Variables:
     '''
-    # start = dt.datetime(2022, 1, 1) #for Yahoo via pdr
     startdate = '2022-01-01'  # input('Startdatum im Format YYYY-MM-DD') usecase for yfinance
     enddate = dt.datetime.now()
 
     main_df = pd.DataFrame()
 
     for count, ticker in enumerate(tqdm(tickers)):
-        # just in case your connection breaks, we'd like to save our progress!
         try:
             df = pdr.get_data_yahoo(ticker, startdate, enddate)
         except Exception as e:
             warnings.warn(
                 'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
                 UserWarning)
-            # fetching data for multiple tickers:
             df = yf.download(ticker, start=startdate, end=enddate)
         #print(df)
         # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
@@ -500,20 +506,28 @@ def get_ohlc_selection_europe_timezone():
     return main_df
 
 
-def get_ohlc_selection_europe_timezone_lastday():
+def get_ohlc_selection_europe_timezone_lastday(reload_euro50=False):
     """
     Just update the table selection_ohlc daily with one row
 
     Since postgres-tables are limited to 1,600 columns, you only can use 3 columns per sp500-ticker.
 
     Beware: Rowsize is 8160 Bytes max
+    :param reload_euro50:
     :param ticker:
     :param startdate:
     :param enddate:
     :return: main_df
     """
+    # tickers = tickers_list_europe()
 
-    tickers = ['BAS.DE', 'MUV2.DE', 'NEL.OL']
+    if reload_euro50 is True:
+        tickers = save_eurostoxx50_tickers()
+    else:
+        with open('eurostoxx50tickers.pickle', 'rb') as f:
+            tickers = pickle.load(f)
+            print(tickers)
+
     print(tickers)
 
     if not os.path.exists('sp500_dfs'):
@@ -533,24 +547,164 @@ def get_ohlc_selection_europe_timezone_lastday():
     # only for testing, for speed and performance reasons just investing with one ticker-symbol:
     # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY']
     for count, ticker in enumerate(tqdm(tickers)):
-        # just in case your connection breaks, we'd like to save our progress!
         try:
-            '''
-            data = yf.download(  # or pdr.get_data_yahoo(...
-                # tickers list or string as well
-                tickers="SPY AAPL MSFT",
-
-                # use "period" instead of start/end
-                # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
-                # (optional, default is '1mo')
-                period="ytd",
-            '''
             df = pdr.get_data_yahoo(ticker, period="1d")
         except Exception as e:
             warnings.warn(
                 'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
                 UserWarning)
-            # fetching data for multiple tickers:
+            df = yf.download(ticker, start=startdate, end=enddate)
+        # print(df)
+        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
+        # print(df.index)
+
+        df['{}_HL_pct_diff'.format(ticker)] = (df['High'] - df['Low']) / df['Low']
+        df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
+
+        # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
+        df.rename(columns={'Adj Close': ticker + '_Adj_Close',
+                           'Open': ticker + '_Open',
+                           'High': ticker + '_High',
+                           'Low': ticker + '_Low',
+                           'Close': ticker + '_Close',
+                           'Volume': ticker + '_Volume'}, inplace=True)
+
+        # später umbenannt wieder hinzufügen
+        # df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+        # print(df)
+
+        if main_df.empty:
+            main_df = df
+        else:
+            main_df = main_df.join(df, how='outer')
+
+        if count % 10 == 0:
+            print(count)
+
+    # Todo in all requests: https://stackoverflow.com/questions/61802080/
+    #  excelwriter-valueerror-excel-does-not-support-datetime-with-timezone-when-saving
+
+    main_df.reset_index(inplace=True)
+    main_df['Date'] = main_df['Date'].dt.tz_localize(None)
+    main_df.set_index('Date', inplace=True)
+    # print(main_df.index)
+
+    main_df.to_excel('sp500_dfs/portfolio_selection_ohlc_only_daily_europe.xlsx', engine='openpyxl')
+    return main_df
+
+
+def get_ohlc_selection_africa():
+    """
+    I need crucially my own ticker list which is reliable due to the reasons, that there are too many unforeseen
+    changes in the SP500 (like the new ticker GEHC on 2023-01-04) and I need securities which are not constituents
+    of the SP500
+    :param ticker:
+    :param startdate:
+    :param enddate:
+    :return: main_df
+    """
+    tickers = tickers_list_africa()
+
+    print(tickers)
+
+    if not os.path.exists('sp500_dfs'):
+        os.makedirs('sp500_dfs')
+
+    '''
+    Variables:
+    '''
+    startdate = '2022-01-01'  # input('Startdatum im Format YYYY-MM-DD') usecase for yfinance
+    enddate = dt.datetime.now()
+
+    main_df = pd.DataFrame()
+
+    for count, ticker in enumerate(tqdm(tickers)):
+        try:
+            df = pdr.get_data_yahoo(ticker, startdate, enddate)
+        except Exception as e:
+            warnings.warn(
+                'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+                UserWarning)
+            df = yf.download(ticker, start=startdate, end=enddate)
+        #print(df)
+        # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
+        #print(df.index)
+
+        df['{}_HL_pct_diff'.format(ticker)] = (df['High'] - df['Low']) / df['Low']
+        df['{}_daily_pct_chng'.format(ticker)] = (df['Close'] - df['Open']) / df['Open']
+
+        # wir nennen die Spalte Adj Close 'Ticker' damit wir die 503 Einträge unterscheiden können
+        df.rename(columns={'Adj Close': ticker+'_Adj_Close',
+                           'Open': ticker+'_Open',
+                           'High': ticker+'_High',
+                           'Low': ticker+'_Low',
+                           'Close': ticker+'_Close',
+                           'Volume': ticker+'_Volume'}, inplace=True)
+
+        # später umbenannt wieder hinzufügen
+        # df.drop(['Open', 'High', 'Low', 'Close', 'Volume'], axis=1, inplace=True)
+        # print(df)
+
+        if main_df.empty:
+            main_df = df
+        else:
+            main_df = main_df.join(df, how='outer')
+
+        if count % 10 == 0:
+            print(count)
+
+    # Todo in all requests: https://stackoverflow.com/questions/61802080/
+    #  excelwriter-valueerror-excel-does-not-support-datetime-with-timezone-when-saving
+
+    main_df.reset_index(inplace=True)
+    main_df['Date'] = main_df['Date'].dt.tz_localize(None)
+    main_df.set_index('Date', inplace=True)
+    # print(main_df.index)
+
+    main_df.to_excel('sp500_dfs/portfolio_selection_ohlc_europe.xlsx', engine='openpyxl')
+    return main_df
+
+
+def get_ohlc_selection_africa_lastday():
+    """
+    Just update the table selection_ohlc daily with one row
+
+    Since postgres-tables are limited to 1,600 columns, you only can use 3 columns per sp500-ticker.
+
+    Beware: Rowsize is 8160 Bytes max
+    :param reload_euro50:
+    :param ticker:
+    :param startdate:
+    :param enddate:
+    :return: main_df
+    """
+    tickers = tickers_list_africa()
+
+    print(tickers)
+
+    if not os.path.exists('sp500_dfs'):
+        os.makedirs('sp500_dfs')
+
+    '''
+    Variables:
+    '''
+    # start = dt.datetime(2022, 1, 1) #for Yahoo via pdr
+    backone_string = back_to_the_future()
+    print(backone_string)
+    startdate = backone_string
+    enddate = None
+
+    main_df = pd.DataFrame()
+
+    # only for testing, for speed and performance reasons just investing with one ticker-symbol:
+    # tickers = ['DE', 'CMCL', 'AAPL', 'CVX', 'IMPUY']
+    for count, ticker in enumerate(tqdm(tickers)):
+        try:
+            df = pdr.get_data_yahoo(ticker, period="1d")
+        except Exception as e:
+            warnings.warn(
+                'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+                UserWarning)
             df = yf.download(ticker, start=startdate, end=enddate)
         # print(df)
         # an dieser Stelle brauchen wir keinen index setzen, weil 'Date' schon der Index ist df = data.set_index('Date', inplace=True)
@@ -709,58 +863,62 @@ def pull_df_from_db(sql='sp500_adjclose'):
 
 
 if __name__ == '__main__':
-    ohlc_attr_input = input('OHLC-Attribut: ')
-    # Todo: here still build in sysvar for command line prompt via calling the file without IDE
-    sp500_df_lastday_per_attr = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
-    push_df_to_db_append(sp500_df_lastday_per_attr, tablename='sp500_'+ohlc_attr_input)
+    if input('Ti va ancora una volta? Si, no?... ').upper() == 'SI':
+        ohlc_attr_input = input('OHLC-Attribut: ')
+        # Todo: here still build in sysvar for command line prompt via calling the file without IDE
+        sp500_df_lastday_per_attr = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+        push_df_to_db_append(sp500_df_lastday_per_attr, tablename='sp500_'+ohlc_attr_input)
 
-    #europe = get_ohlc_selection_europe_timezone()
-    #push_df_to_db_replace(europe, tablename='selection_ohlc_europe')
+        # europe = get_ohlc_selection_europe_timezone()
+        # push_df_to_db_replace(europe, tablename='ohlc_europe')
 
-    #selection = get_yahoo_ohlc_selection()
-    # print(selection)
+        # europe_lastday = get_ohlc_selection_europe_timezone_lastday()
+        # push_df_to_db_append(europe_lastday, tablename='ohlc_europe')
 
-    #push_df_to_db_replace(selection, tablename='selection_ohlc')
+        #africa = get_ohlc_selection_africa()
+        #push_df_to_db_replace(africa, tablename='ohlc_africa')
 
-    #sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+        #sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
-    #push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
+        #push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
 
-    #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
-    #print(df)
+        #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+        #print(df)
 
-    #sp500_df_per_attr_lastday = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
-    #push_df_to_db(sp500_df_per_attr_lastday, tablename='sp500_' + ohlc_attr_input)
+        #sp500_df_per_attr_lastday = get_sp500_ohlc_today(ohlc_attr=ohlc_attr_input, reload_sp500=False)
+        #push_df_to_db(sp500_df_per_attr_lastday, tablename='sp500_' + ohlc_attr_input)
 
-    #df = pull_df_from_db(sql='sp500_' + ohlc_attr_input)
-    #print(df)
+        #df = pull_df_from_db(sql='sp500_' + ohlc_attr_input)
+        #print(df)
 
-    #commodities_ohlc = get_yahoo_ohlc_commodities()
-    #push_df_to_db(commodities_ohlc, tablename='commodities_ohlc')
-    #print(commodities_ohlc)
+        #commodities_ohlc = get_yahoo_ohlc_commodities()
+        #push_df_to_db(commodities_ohlc, tablename='commodities_ohlc')
+        #print(commodities_ohlc)
 
-    #sp500_volume = get_yahoo_sp500_ohlc()
-    #print(sp500_volume)
+        #sp500_volume = get_yahoo_sp500_ohlc()
+        #print(sp500_volume)
 
-    #sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
-    #print(sp500_df)
+        #sp500_df = get_yahoo_sp500_adjclose(reload_sp500=False)
+        #print(sp500_df)
 
-    #push_df_to_db(sp500_df, tablename='sp500_adjclose')
-
-
-    #sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
-    #print(sp500_only1day)
-
-    #push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
+        #push_df_to_db(sp500_df, tablename='sp500_adjclose')
 
 
-    # dailysel = get_selection_ohlc_today()
-    # print(dailysel)
+        #sp500_only1day = get_sp500_ohlc_today(reload_sp500=False)
+        #print(sp500_only1day)
 
-    # push_df_to_db(dailysel, tablename='selection_ohlc')
+        #push_df_to_db(sp500_only1day, tablename='sp500_adjclose')
 
-    #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
-    #print(df)
 
-    #sys.exit('Jetzt ist aber Schluss hier!')
+        # dailysel = get_selection_ohlc_today()
+        # print(dailysel)
+
+        # push_df_to_db(dailysel, tablename='selection_ohlc')
+
+        #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+        #print(df)
+
+    else:
+        #sys.exit('Jetzt ist aber Schluss hier!')
+        sys.exit('Adesso, basta! Adesso ne ho abbastanza!')
 

@@ -6,12 +6,12 @@ import requests
 
 
 def save_sp500_tickers():
-    '''
+    """
     The pickle module
     Now, it'd be nice if we could just save this list. We'll use the pickle module for this,
     which serializes Python objects for us. We save its nature within the object.
     :return:
-    '''
+    """
     headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
     response = requests.get('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies', headers=headers)
