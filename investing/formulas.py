@@ -234,13 +234,14 @@ def bayes_law(ticker_event_a: str, ticker_event_b: str, days: int, *args, **kwar
     return main_df
 
 
-def binomial_distribution(ticker: str = 'DE', days_longterm_prob: int = 100, days_shortterm_prob: int = 5,
+def binomial_distribution(area: str = 'sp500', ticker: str = 'DE', days_longterm_prob: int = 100, days_shortterm_prob: int = 5,
                           interval: int = 3, *args, **kwargs):
     """
     Usecases:
     1. Count the rising days of all tickers - that's the success-outcome of the trial (stock rises or falls),
     calculate probability and infer now the probability of 3 rising days within one workweek (5 days)
     2. Todo: Will ticker-companies beat or miss earnings estimates given the historical data and probabilities
+    :param area:
     :param interval:
     :param days_shortterm_prob:
     :param days_longterm_prob:
@@ -249,15 +250,30 @@ def binomial_distribution(ticker: str = 'DE', days_longterm_prob: int = 100, day
     :param kwargs:
     :return:
     """
-    df = pull_df_from_db(sql='sp500_adjclose')
 
-    print(df)
+    #Todo: hier einen match 'europe, sp500, africa' case - default - function einbauen:
+
+    match area:
+        case 'sp500':
+            df = pull_df_from_db(sql='sp500_adjclose')
+        case 'europe':
+            df = pull_df_from_db(sql='eurostoxx50_adjclose')
+        case 'africa':
+            df = pull_df_from_db(sql='africatop250_adjclose')
+        case default:
+            df = pull_df_from_db(sql='sp500_adjclose')
+
+    print('*'*40)
+    print('Beispiele für Binomialverteilung:')
+    print('*'*40)
+    #print(df)
     print(ticker)
     # stopp = input('stopp...')
     df = df.copy()  # for defragmentation
     df['daily_returns_' + ticker] = df[ticker].pct_change().dropna()
 
     vals_historic_complete = df['daily_returns_' + ticker].values.tolist()
+    vals_historic_complete = vals_historic_complete[1:]
     print(vals_historic_complete)
     count = 0
     for i in vals_historic_complete:
@@ -311,15 +327,111 @@ def binomial_distribution(ticker: str = 'DE', days_longterm_prob: int = 100, day
     fact_n = factorial(days_shortterm_prob)
     print(fact_n)
     comb = factorial(n)/(factorial(y)*factorial(n-y))
-    print(comb)
+    comb_1 = factorial(n)/(factorial(1)*factorial(n-1))
+    comb_2 = factorial(n)/(factorial(2)*factorial(n-2))
+    print('# of Combinations y, 1, 2: ',comb, comb_1, comb_2)
     # stopp = input('stopp...')
 
     p_bi_dist_long = comb * (p**y) * ((1 - p)**(n-y))
+
+    """ Distribution exactly y matches """
     p_bi_dist_short = comb * (p_short ** y) * ((1 - p_short) ** (n - y))
+
+    """ Distribution maximum y matches """
+    p_max_y_short_1 = comb_1 * (p_short ** 1) * ((1 - p_short) ** (n - 1))
+    p_max_y_short_2 = comb_2 * (p_short ** 2) * ((1 - p_short) ** (n - 2))
+    p_max_y_short_3 = comb * (p_short ** y) * ((1 - p_short) ** (n - y))
+    p_max_sum = round(p_max_y_short_1 + p_max_y_short_2 + p_max_y_short_3, 2)
+
+    """ Distribution minimum y matches"""
+
+    """ Distribution more than y matches"""
+    p_more_than_y = 1 - p_max_sum
+
     print(f'Probability with long p of {ticker} of {interval} days rising within {days_shortterm_prob} days is: {p_bi_dist_long}.')
-    print(f'Probability short of {ticker} of {interval} days rising within {days_shortterm_prob} days is: {p_bi_dist_short}.')
+    print(f'Probability short of {ticker} of exactly {interval} days rising within {days_shortterm_prob} days is: {p_bi_dist_short}.')
+    print(
+        f'Probability short of {ticker} of 1 days rising within {days_shortterm_prob} days is: {p_max_y_short_1}.')
+    print(
+        f'Probability short of {ticker} of 2 days rising within {days_shortterm_prob} days is: {p_max_y_short_2}.')
+    print(
+        f'Probability short of {ticker} of 3 days rising within {days_shortterm_prob} days is: {p_max_y_short_3}.')
+    print('Maximum y matches: ', p_max_sum)
+    print('More than y matches: ', p_more_than_y)
 
     return p_bi_dist_long, stddev
+
+
+def option_pricing(strike_price: float, p_up: float, p_down: float,  market_price_max: float = 100,
+                   market_price_min: float = 90, ticker: str = 'DE', n: int = 10,
+                   premium: float = 0):
+    """
+    Option: an agreement between two parties for the price of a stock or item at a future point in time. It allows
+    one of the sides to decide to buy (call the option) or not to buy the underlying asset on day x. The party who
+    decides must pay a premium (kind of fee) to the issuer nevertheless if it buys or not. Question:
+    how much we are willing to pay to receive that pact?
+    :param strike_price:
+    :param p_up:
+    :param p_down:
+    :param market_price_max:
+    :param market_price_min:
+    :param ticker:
+    :param n:
+    :param premium:
+    :return:
+    """
+
+    df = pull_df_from_db(sql='sp500_adjclose')
+    df = df.copy()  # for defragmentation
+    df['daily_returns_' + ticker] = df[ticker].pct_change().dropna()
+    vals_historic_complete = df['daily_returns_' + ticker].values.tolist()
+    vals_historic_complete = vals_historic_complete[1:]
+    print(vals_historic_complete)
+
+    count = 0
+    for i in vals_historic_complete:
+        if i > 0:
+            count += 1
+        else:
+            continue
+
+    # calculate the probability historic:
+    p_ticker_historic = float(count / len(vals_historic_complete))
+
+    df = df[-7:]
+    vals_shortterm = df['daily_returns_' + ticker].values.tolist()
+    print(vals_shortterm)
+    count_shortterm = 0
+    for i in vals_shortterm:
+        if i > 0:
+            count_shortterm += 1
+        else:
+            continue
+
+    # calculate the probability shortterm:
+    p_ticker_short = float(count_shortterm / len(vals_shortterm))
+
+    print(f'Length of vals is {len(vals_historic_complete)}. ')
+    print(f'Length of vals short is {len(vals_shortterm)}. ')
+    print(f'Count of rising is: {count}, Probability of {ticker} rising within {len(vals_historic_complete)} '
+          f'days: {round(p_ticker_historic, 3)}')
+    print(f'Count of rising is: {count}, Probability of {ticker} rising within {len(vals_shortterm)} '
+          f'days: {round(p_ticker_short, 3)}')
+    print(df['DE'])
+
+    call_payoff = (n * market_price_max) - premium - (n * strike_price)
+    p_down = 1 - p_ticker_short
+    print('p_down:', p_down)
+
+    match premium:
+        case 0:
+            expected_payoff = round((p_ticker_short * (n * (market_price_max - strike_price))), 3)
+
+        case default:
+            expected_payoff = round((p_ticker_short * call_payoff) + (p_down * -premium), 3)
+
+    print(f'Surplus is: {call_payoff}')
+    print(f'Surplus after call: {expected_payoff}, extra premium you could pay for matching fair deal: {expected_payoff}')
 
 
 if __name__ == '__main__':
@@ -327,5 +439,7 @@ if __name__ == '__main__':
     main_df = bayes_law('CMCL', 'GC=F', 100, ['DE', 'IMPUY', 'CMCL', 'AU'], optional_list=['DE', 'IMPUY', 'CMCL', 'AU'])
     # push_df_to_db_replace(main_df, 'bayes_law')
     print(main_df)
-    binomial_distribution(ticker='AAPL')
+    #BAS.DE, MUV2.DE - geht noch nicht, weil ich noch kein table europe_adjclose habe
+    binomial_distribution(area='sp500', ticker='DE')
+    option_pricing(390, 0.4, 0.6, 420, 380, n=10, premium=100)
 

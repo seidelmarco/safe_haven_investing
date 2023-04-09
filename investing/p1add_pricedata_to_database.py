@@ -872,8 +872,8 @@ if __name__ == '__main__':
         # europe = get_ohlc_selection_europe_timezone()
         # push_df_to_db_replace(europe, tablename='ohlc_europe')
 
-        # europe_lastday = get_ohlc_selection_europe_timezone_lastday()
-        # push_df_to_db_append(europe_lastday, tablename='ohlc_europe')
+        #europe_lastday = get_ohlc_selection_europe_timezone_lastday()
+        #push_df_to_db_append(europe_lastday, tablename='ohlc_europe')
 
         #africa = get_ohlc_selection_africa()
         #push_df_to_db_replace(africa, tablename='ohlc_africa')
