@@ -147,8 +147,11 @@ if __name__ == '__main__':
     #push_df_to_db_replace(df_basic, 'sp500_basicinfo')
     print(df_basic)
     """
+    df = get_stock_info()
     df_europe = get_stock_info_europe()
-    push_df_to_db_replace(df_europe, 'euro50_stockinfo')
+    print(df)
+    print(df_europe)
+    #push_df_to_db_replace(df_europe, 'euro50_stockinfo')
 
     #data = yf.Ticker('DE')
     #print(data.info)

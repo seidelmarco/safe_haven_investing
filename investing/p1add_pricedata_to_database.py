@@ -747,7 +747,8 @@ def get_ohlc_selection_africa_lastday():
 
 def get_yahoo_ohlc_commodities():
     """
-    I need crucially my own ticker list for continuous commodities,
+    I need crucially my own ticker list for continuous commodities, e. g. 6E-basket: 'GC=F', 'PL=F', 'PA=F', 'XRH0.L',
+    Iridium???, Rhutenium???, Osmium???
     :param ohlc_attr:
     :param ticker:
     :param startdate:
@@ -917,6 +918,7 @@ if __name__ == '__main__':
 
         #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
         #print(df)
+        sys.stdout.write('Sollte alles geklappt haben... :-)')
 
     else:
         #sys.exit('Jetzt ist aber Schluss hier!')

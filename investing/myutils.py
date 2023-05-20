@@ -169,13 +169,14 @@ def tickers_list_africa():
     'RCL.JO',
     'MT',
     'SGHC', 'EGS673Y1C015.CA', 'AFT.JO', 'HCI.JO', 'ADH.JO', 'JSEJF', 'AIP.JO', 'DTTLY', 'DTC.JO', 'EGS3D041C017.CA',
-    '7YZ.F', 'RNRTY', 'EGS60171C013 - EGP.CA', 'RY1B.F', 'GRIN', 'GND.JO', 'GSH.JO', 'JSE.JO', 'THA.JO', 'RZT.F',
-    'LBR.JO', 'EGS70011C019 - EGP.CA', 'EGS380S1C017.CA', 'DYLLF', 'EGS305I1C011.CA', 'SHG.JO'
+    '7YZ.F', 'RNRTY', 'RY1B.F', 'GRIN', 'GND.JO', 'GSH.JO', 'JSE.JO', 'THA.JO', 'RZT.F',
+    'LBR.JO', 'EGS380S1C017.CA', 'DYLLF', 'EGS305I1C011.CA', 'SHG.JO'
                ]
 
     # raus, weil nicht von fmp kostenlos gelesen: 'IAM.PA', 'INL.JO', 'NPH.JO', 'PPH.JO', 'OMU.JO', 'GRT.JO', 'RBP.JO'
     # 'NY1.JO', 'AIL.JO', 'TCP.JO', 'LHC.JO', 'SNT.JO', 'DCP.JO', 'MTM.JO', 'EGS38191C010.CA', 'TRU.JO',
-    # 'EGS48031C016.CA', 'GTCO.IL', 'ITE.JO', 'EGS37091C013.CA', 'EKHOLDING.KW', 'MTH.JO'
+    # 'EGS48031C016.CA', 'GTCO.IL', 'ITE.JO', 'EGS37091C013.CA', 'EKHOLDING.KW', 'MTH.JO', 'EGS60171C013 - EGP.CA'
+    # , 'EGS70011C019 - EGP.CA'
 
     return tickers
 

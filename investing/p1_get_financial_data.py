@@ -4,6 +4,7 @@
 In Windows muss man so die packages installieren
 py -m pip install pandas
 """
+import sys
 import datetime as dt
 import time
 import warnings
@@ -250,3 +251,4 @@ if __name__ == '__main__':
 
     get_currency_pairs()
     push_df_to_db_replace(get_currency_pairs(), 'pricedata_curreny_pairs')
+    sys.stdout.write('Alle Währungspaare gezogen und auf Datanbank geschaufelt.')

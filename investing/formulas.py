@@ -434,6 +434,36 @@ def option_pricing(strike_price: float, p_up: float, p_down: float,  market_pric
     print(f'Surplus after call: {expected_payoff}, extra premium you could pay for matching fair deal: {expected_payoff}')
 
 
+def confidence_intervals_two_means_sector_analysis():
+    """
+    try it out - does it make sense?
+    Compare the annually means of the performance of two sectors of the SP500. We have different sample sizes.
+    We can calculate the population variances of the sectors and the means of the stocks.
+    Are the populations normally distributed? That's the big question...
+    Are the samples really truly independent?
+    Problem: we want to find a 95% CI for the difference between the performances (in %) od the stocks of Energy and
+    Industrials.
+
+    Idee für die Arbeit: inventory management - nimm Verkaufsdaten (aus Umsatzzahlen) der letzten zwei Jahre, berechne
+    den Durchschnitt für jeden Monat und den Standarderror für die Stichprobe - CI 95% für das Folgejahr
+    :return:
+    """
+
+
+def hypothesis_testing_outperform_market_on_few_special_days():
+    """
+    The idea: it is said that the stock market makes its biggest returns within only 5 days during a year. These 5
+    days compound for a positive return of the whole year.
+    Find such days by looking diligently and name them.
+    State the hypothesis:
+    H0: On day x the market return of an index/sector/stock is an average return in line with the prior weeks or year,
+        H0: return(x) = average + 0 -> means no change
+    H1: return(x) = average + 5%
+    Collect the market data: special days in 2023...
+    :return:
+    """
+
+
 if __name__ == '__main__':
     # print(get_daily_returns('BAS.DE', startdate='2023-01-01', enddate='2023-02-13'))
     main_df = bayes_law('CMCL', 'GC=F', 100, ['DE', 'IMPUY', 'CMCL', 'AU'], optional_list=['DE', 'IMPUY', 'CMCL', 'AU'])
