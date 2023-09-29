@@ -10,8 +10,6 @@ import time
 import warnings
 from datetime import datetime
 
-import matplotlib.pyplot as plt
-from matplotlib import style
 import pandas as pd
 import pandas_datareader.data as pdr
 
@@ -25,7 +23,6 @@ yf.pdr_override()
 '''
 Konfigurationen
 '''
-style.use('ggplot')
 # wird obsolet, wenn wir mit yf overriden - nothing will happen:
 pd.set_option("display.max.columns", None)
 
@@ -251,4 +248,4 @@ if __name__ == '__main__':
 
     get_currency_pairs()
     push_df_to_db_replace(get_currency_pairs(), 'pricedata_curreny_pairs')
-    sys.stdout.write('Alle Währungspaare gezogen und auf Datanbank geschaufelt.')
+    sys.stdout.write('Alle Währungspaare gezogen und auf Datenbank geschaufelt.')

@@ -120,7 +120,7 @@ def dummy_variables():
     x = sm.add_constant(x1)
 
     # Fit the model, according to the OLS method with a dependent var. y and an independent
-    results = sm.OLS(y,x).fit()
+    results = sm.OLS(y, x).fit()
     print(results.summary())
 
     # Create a scatter plot of SAT and GPA
@@ -161,7 +161,7 @@ def dummy_variables():
     # The constant is always 1, while each of the lines corresponds to an observation (student)
     new_data = pd.DataFrame({'const':1, 'SAT': [1700, 1670], 'Attendance': [0, 1]})
 
-    # By default in older Pandas-versions the columns are ordered alphabetically. But if you feed the model wrong
+    # By default, in older Pandas-versions the columns are ordered alphabetically. But if you feed the model wrong
     # you will get wrong results. So, to be on the save side, reorder them intentionally
     new_data = new_data[['const', 'SAT', 'Attendance']]
     print(new_data)

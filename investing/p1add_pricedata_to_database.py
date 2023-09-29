@@ -176,7 +176,7 @@ def get_sp500_ohlc_today(ohlc_attr: str = 'adjclose', reload_sp500=False):
     Just update the table sp500_ohlc daily with one row
 
     Since postgres-tables are limited to 1,600 columns, you only can use 3 columns per sp500-ticker. So, here we
-    just grab adusted close
+    just grab adjusted close
 
     Rowsize is 8160 Bytes max, so we can only use one column per ticker
     :return: df
@@ -918,7 +918,7 @@ if __name__ == '__main__':
 
         #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
         #print(df)
-        sys.stdout.write('Sollte alles geklappt haben... :-)')
+        sys.stdout.write(f'Sollte alles geklappt haben...mit..."{ohlc_attr_input}" :-)')
 
     else:
         #sys.exit('Jetzt ist aber Schluss hier!')

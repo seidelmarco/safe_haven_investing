@@ -90,10 +90,11 @@ class LinearRegression(LinearRegression):
 
 
 def linear_regression_practical_example_improved(quantile_percent_upper: float = 0.99,
-                                                 quantile_percent_lower: float = 0.05,
-                                                 ):
+                                                 quantile_percent_lower: float = 0.05, price_attr: str = 'log_price',
+                                                 year_attr: str = 'on'):
     """
     Goal is to improve the model "Prices of used cars". Prior R2 was around .75. We want to reach a higher number.
+    Edit: May 31st R2 = .88 training, .8681 test - Adj R2 training: .8787, .8645 test
     We would like to explain around 90% of the variability of the model.
     In the first model we dropped the car "Model" - maybe we should use it.
     More over we should rethink how many outliers we drop or not - which quantiles will we use?
@@ -113,6 +114,8 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     3. Find the benchmark of the unique categories, reorder and drop the first dummy (benchmark-dummy)
     4. Choose the independent vars.
     5. Check for multicollinearity: is there a biasing correlation between Mercedes, mileage and E-Class?
+    :param year_attr: default on: let's use year as a predictor
+    :param price_attr: change between the target log_price and price
     :param feature_selection: model, benchmark, wo_benchmark
     :param model: if the car-model is False (default), we omit this variable from the regression (it would produce
     too many uncontrollable dummies
@@ -167,10 +170,11 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     print(data_no_models.isnull().sum())
     data_no_mv = data_no_models.dropna(axis=0)
     print(data_no_mv.isnull().sum())
+    print(data_no_mv.describe())
 
     # plot distributions as a subplot-matrix
     fig, axes = plt.subplots(2, 2, sharey=True, figsize=(7, 7))
-    fig.suptitle('Comparison of feature-distributions')
+    fig.suptitle('Comparison of feature-distributions before preprocessing/cutting outliers')
     sns.histplot(data_no_mv['Price'], kde=True, ax=axes[0, 0])
     sns.histplot(data_no_mv['Mileage'], kde=True, ax=axes[0, 1])
     sns.histplot(data_no_mv['EngineV'], kde=True, ax=axes[1, 0])
@@ -205,12 +209,76 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     
     """
     # calculate 5 % of data for sort-indexer (has to be integer):
+    # we count the top 5% of Price, Mileage and Engine-volume; how can we use this knowledge, can we spot some
+    # outliers which falsify our general and average prediction?
+
     print(data_no_mv.sort_values(by=['Price'], ascending=False).head(int((data_no_mv['Brand'].count()*0.05).round(0))))
     print(
         data_no_mv.sort_values(by=['Mileage'], ascending=True).head(int((data_no_mv['Brand'].count()*0.05).round(0))))
     print(
         data_no_mv.sort_values(by=['EngineV'], ascending=True).head(int((data_no_mv['Brand'].count()*0.05).round(0))))
 
+    """
+          Brand      Price       Body  Mileage  EngineV Engine Type   
+    1728  Mercedes-Benz 300000.000      sedan       68    6.000      Petrol  \
+    4318  Mercedes-Benz 300000.000      other       37    5.000      Petrol   
+    4101  Mercedes-Benz 295000.000      sedan       29    6.000      Petrol   
+    3164  Mercedes-Benz 295000.000      sedan       29    6.000      Petrol   
+    2243  Mercedes-Benz 250000.000      other        6    5.500      Petrol   
+    2188  Mercedes-Benz 249999.000      other        3    5.500      Petrol   
+    2011  Mercedes-Benz 222000.000  crossover        0    6.300      Petrol   
+    4044  Mercedes-Benz 219900.000  crossover       30    6.300      Petrol   
+    3645  Mercedes-Benz 219900.000  crossover       33    5.500      Petrol   
+    3928  Mercedes-Benz 200000.000        van       19    3.500      Petrol   
+    3244  Mercedes-Benz 199999.000  crossover        0    5.500      Petrol   
+    5     Mercedes-Benz 199999.000  crossover        0    5.500      Petrol   
+    602   Mercedes-Benz 199999.000  crossover        0    5.500      Petrol   
+    348   Mercedes-Benz 199999.000  crossover        0    5.500      Petrol   
+    438   Mercedes-Benz 195000.000  crossover        2    5.500      Petrol   
+    131          Toyota 195000.000  crossover        0    4.500      Diesel   
+    2521         Toyota 195000.000  crossover        0    4.500      Diesel   
+    2657  Mercedes-Benz 189999.000      other        0    4.700      Petrol   
+    3636  Mercedes-Benz 187555.000      other        0    4.700      Petrol   
+    2550  Mercedes-Benz 185555.000      other        0    4.700      Petrol   
+    2130  Mercedes-Benz 177777.000  crossover        0    5.500      Petrol   
+    1644  Mercedes-Benz 177000.000  crossover        0    5.500      Petrol   
+    993   Mercedes-Benz 173333.000      other        0    3.000      Petrol   
+    173   Mercedes-Benz 169000.000      other        1    4.700      Petrol   
+    1752  Mercedes-Benz 169000.000        van        1    3.000      Diesel   
+    594          Toyota 164500.000  crossover        0    4.500      Diesel   
+    2744  Mercedes-Benz 160000.000      other        8    4.600      Petrol   
+    3330  Mercedes-Benz 159999.000      other        0    3.000      Petrol   
+    1304  Mercedes-Benz 154999.000  crossover        0    4.600      Petrol   
+    1658  Mercedes-Benz 144900.000      sedan       16    3.000      Diesel   
+    2226  Mercedes-Benz 140000.000  crossover       88    5.460      Petrol   
+    1885            BMW 139000.000  crossover        0    4.400      Petrol   
+    2212  Mercedes-Benz 138000.000  crossover        0    3.000      Diesel   
+    1436            BMW 137000.000  crossover        2    4.400      Petrol   
+    1914  Mercedes-Benz 137000.000  crossover       82    5.500      Petrol   
+    3167  Mercedes-Benz 135555.000      sedan       54    4.660      Petrol   
+    218          Toyota 135000.000  crossover        1    4.500      Diesel   
+    62              BMW 133000.000  crossover        7    4.400      Petrol   
+    847   Mercedes-Benz 129999.000      sedan       37    4.700      Petrol   
+    2209  Mercedes-Benz 129999.000  crossover        1    2.990      Diesel   
+    2034  Mercedes-Benz 129999.000  crossover        0    4.670      Petrol   
+    3290            BMW 129222.000      sedan        2    5.000      Petrol   
+    4264  Mercedes-Benz 126000.000      sedan       14    3.000      Diesel   
+    1557  Mercedes-Benz 125000.000      sedan       17    3.000      Diesel   
+    2486  Mercedes-Benz 125000.000      sedan       18    3.000      Diesel   
+    1346  Mercedes-Benz 125000.000      sedan       18    3.000      Diesel   
+    4340  Mercedes-Benz 125000.000      sedan        9    3.000      Diesel   
+    3059  Mercedes-Benz 124999.000  crossover        0    3.000      Diesel   
+    2393  Mercedes-Benz 124000.000  crossover        0    4.000      Petrol   
+    2857  Mercedes-Benz 124000.000  crossover        0    3.000      Petrol   
+    ...             ...        ...        ...      ...      ...         ...   
+    997          Toyota  72000.000  crossover       40    4.500      Diesel   
+    
+    Mileage: delete all zeros at least (error or new cars) and maybe all 1's (almost new) - they falsify
+    the used-cars market
+    All zeros are 185 (4,6% of data_no_mv), all zeros and ones 312 (7,8% data_no_mv) - 
+    4025 rows data without missing values.
+    The zeros are outside the quantile_percent_lower
+    """
     # Todo: cut-off here the lower and upper quantiles of price, mileage and engine volume:
     q_price_lower = data_no_mv['Price'].quantile(quantile_percent_lower)
     q_price_upper = data_no_mv['Price'].quantile(quantile_percent_upper)
@@ -226,6 +294,8 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     q_summary = pd.DataFrame(data=data, index=[0])
     print(q_summary)
     # the following syntax overrides the column data_no_mv:
+    # Todo: play with mileage w/o zeros and without lower 5%
+    # data_wo_mileage_zeros = data_no_mv[data_no_mv['Mileage'] != 0]
     data_wo_outliers = data_no_mv[data_no_mv['Price'] < q_price_upper]
     data_wo_outliers = data_wo_outliers[data_wo_outliers['Mileage'] < q_mileage_upper]
     data_wo_outliers = data_wo_outliers[data_wo_outliers['Mileage'] > q_mileage_lower]
@@ -267,8 +337,7 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     ax3.set_title('Price and Year')
 
     # we can spot exponential curves with the year, enginev and mileage and have to transform the variables
-    log_price = np.log(data_cleaned['Price'])
-    data_cleaned['log_price'] = log_price
+    data_cleaned['log_price'] = np.log(data_cleaned['Price'])
 
     # 1. Check for linearity - now with log-price-transformation:
     # let's plot the datapoints of feature-targets-pairs for that we can see the distributions
@@ -283,8 +352,17 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
 
     plt.show()
 
+    """
+    take it again in if it won't work below:
+    """
+    data_cleaned_copy_with_all_prices = data_cleaned.copy()
     # Todo: task by instructor: use Price instead of log_price
-    data_cleaned.drop(['Price'], axis=1, inplace=True)
+
+    match price_attr:
+        case 'log_price':
+            data_cleaned.drop(['Price'], axis=1, inplace=True)
+        case 'price':
+            data_cleaned.drop(['log_price'], axis=1, inplace=True)
 
     # 2. Check for no endogeneity:
     # omitted variable bias: we must not forget a crucial variable otherwise the error-term would enlarge
@@ -312,11 +390,13 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     print(vif)
 
     # Todo: try to improve by switching year on/off as a predictor:
-    # we decide to take out the 'year' due to its high VIF
-    # data_no_multicollinearity = data_cleaned.drop(['Year'], axis=1)
-
-    # IMPROVEMENT: let's play with the year and include it:
-    data_no_multicollinearity = data_cleaned
+    match year_attr:
+        case 'off':
+            # we decide to take out the 'year' due to its high VIF
+            data_no_multicollinearity = data_cleaned.drop(['Year'], axis=1)
+        case 'on':
+            # IMPROVEMENT: let's play with the year and include it:
+            data_no_multicollinearity = data_cleaned
 
     # create the dummy variables
     # reorder: bringing benchmark into first place
@@ -375,15 +455,39 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     # we won't need the Model - too many distinct values, too many dummies:
 
     data_preprocessed = data_with_dummies   #[cols] or other arrays
+
+    # the following spreadsheet contains either 'price' or 'log_price':
     data_preprocessed.describe(include='all').to_excel('data_regressions/no_models_used_car_sales_data_no_mv.xlsx',
                                                         engine='openpyxl')
 
     """
         Linear regression model
+        Test 1: oops, I commented out data_cleaned.drop(['Price'] in line 360: this 
+        leads to an R^2 of .94! Something is wrong with my control flow...no: if I use log_price as target and I
+        forget to drop 'price' then in my features I have price as a predictor of log_price/price :-)
+        
+        Test 2: I dropped log_price in line 360
+         R^2 - trainingsdata: 0.7250321231854443
+            R^2 - testdata: 0.6855391981940218
+        and no plotting of Targets-vs-Predictions - why??? (my x and ylim were constrained :-)
+        
+        Observation: a 7.71 log-target leads to a 9 log-prediction,  means: a 2,300 Dollar-car is predicted to cost
+        more than 8,000 Dollars - that's a massive outlier
+        
+        Test 3 - Log-price and changing of....:
     """
-    # Declare the variables
-    features = data_preprocessed.drop(['log_price'], axis=1)
-    targets = data_preprocessed['log_price']
+
+    match price_attr:
+        case 'log_price':
+            # Declare the variables
+            features = data_preprocessed.drop(['log_price'], axis=1)
+            targets = data_preprocessed['log_price']
+
+        case 'price':
+            # Declare the variables with Price instead of log_price: (task from the instructor)
+            # Todo: task by instructor: use Price instead of log_price - Test 2
+            features = data_preprocessed.drop(['Price'], axis=1)
+            targets = data_preprocessed['Price']
 
     # scale the data:
     scaler = StandardScaler()
@@ -402,10 +506,15 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     y_hat = reg.predict(x_train)
     # print(np.exp(y_hat))
     plt.scatter(y_train, y_hat)
+    plt.title('Comparison Targets and Predictions of the training data')
     plt.xlabel('Targets (y_train)', size=18)
     plt.ylabel('Predictions (y_hat)', size=18)
-    plt.xlim(6, 13)
-    plt.ylim(6, 13)
+    match price_attr:
+        case 'log_price':
+            plt.xlim(6, 13)
+            plt.ylim(6, 13)
+        case 'price':
+            plt.plot(range(-10000, 70000), range(-10000, 70000), c='orange', linestyle='dashed', linewidth=2, alpha=0.4)
 
     # Plot the residuals (the differences between targets and predictions, so we use subtraction):
     sns.displot(y_train - y_hat, kde=True, height=7, aspect=1.5)
@@ -456,19 +565,40 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     y_hat_test = reg.predict(x_test)
     plt.plot(range(0, 14), range(0, 14), c='orange', linestyle='dashed', linewidth=2, alpha=0.4)
     plt.scatter(y_test, y_hat_test, alpha=0.4)
+    plt.title('Comparison Targets and Predictions of the test data')
     plt.xlabel('Targets (y_test)', size=18)
     plt.ylabel('Predictions (y_hat_test)', size=18)
-    plt.xlim(6, 13)
-    plt.ylim(6, 13)
+
+    match price_attr:
+        case 'log_price':
+            plt.xlim(6, 13)
+            plt.ylim(6, 13)
+        case 'price':
+            plt.plot(range(-10000, 70000), range(-10000, 70000), c='orange', linestyle='dashed', linewidth=2, alpha=0.4)
     plt.show()
 
     # let's manually explore how our model performed in a dataframe-performance df_pf:
     # we see the log-prices and have to reconvert with the exponentials:
+    """
+    If we use prices - the numbers are getting too large:
+    linear_regression_example_improved.py:488: 
+    RuntimeWarning: overflow encountered in exp
     df_pf = pd.DataFrame(data=np.exp(y_hat_test), columns=['Predictions'])
-    df_pf['Test_Targets'] = np.exp(y_test.reset_index(drop=True))
-    df_pf['Residuals'] = df_pf['Predictions'] - df_pf['Test_Targets']
-    df_pf['Deviation in %'] = np.absolute(df_pf['Residuals'] / df_pf['Test_Targets'] * 100)
-    print(df_pf.sort_values(by=['Deviation in %'], ascending=False).head(30))
+    """
+
+    match price_attr:
+        case 'log_price':
+            df_pf = pd.DataFrame(data=np.exp(y_hat_test), columns=['Predictions'])
+            df_pf['Test_Targets'] = np.exp(y_test.reset_index(drop=True))
+            df_pf['Residuals'] = df_pf['Predictions'] - df_pf['Test_Targets']
+            df_pf['Deviation in %'] = np.absolute(df_pf['Residuals'] / df_pf['Test_Targets'] * 100)
+            print(df_pf.sort_values(by=['Deviation in %'], ascending=False).head(30))
+        case 'price':
+            df_pf = pd.DataFrame(data=y_hat_test, columns=['Predictions'])
+            df_pf['Test_Targets'] = y_test.reset_index(drop=True)
+            df_pf['Residuals'] = df_pf['Predictions'] - df_pf['Test_Targets']
+            df_pf['Deviation in %'] = np.absolute(df_pf['Residuals'] / df_pf['Test_Targets'] * 100)
+            print(df_pf.sort_values(by=['Deviation in %'], ascending=False).head(30))
 
     print(df_pf.describe(include='all'))
 
@@ -479,8 +609,17 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
     f_reg_data_no_mv = f_regression(data_no_mv[['Mileage', 'EngineV', 'Year']], data_no_mv['Price'])
     print('F-regression data:', f_reg_data_no_mv)
 
-    f_reg_data_cleaned = f_regression(data_cleaned[['Mileage', 'EngineV', 'Year']],
-                                      data_cleaned['log_price'])
+    """
+    Also here change between Price and log_price
+    """
+    match price_attr:
+        case 'log_price':
+            f_reg_data_cleaned = f_regression(data_cleaned[['Mileage', 'EngineV', 'Year']],
+                                              data_cleaned['log_price'])
+        case 'price':
+            f_reg_data_cleaned = f_regression(data_cleaned[['Mileage', 'EngineV', 'Year']],
+                                              data_cleaned['Price'])
+
     print('F-regression data cleaned:', f_reg_data_cleaned)
 
     p_values = f_reg_data_cleaned[1]
@@ -512,9 +651,30 @@ def linear_regression_practical_example_improved(quantile_percent_upper: float =
             AdjR^2 - testdata: {adjr2_test}
            """)
 
+    #print(f"""
+    #    For testing:
+    #    {data_cleaned_copy_with_all_prices}
+    #""")
+
+    # for tinkering:
+    data_wo_mileage_zeros = data_no_mv[data_no_mv['Mileage'] != 0]
+    # print(data_wo_mileage_zeros.sort_values(by='Mileage', ascending=True))
+    data_wo_mileage_zeros.to_excel('data_regressions/used_car_sales_data_wo_mileage_zeros.xlsx', engine='openpyxl')
+
+    print(f"""
+        Was passiert, wenn ich y_hat mit realem 'price' und nicht 'log_price' nehme:
+        Bei log_price sehe ich wieder die exp. echten Preise.
+        Bei price ....[inf inf inf ... inf inf inf] wegen overflow encountered in exp...
+        {np.exp(y_hat)}
+    """)
+
+    # include='all' makes that I also see the dummies :-) Don't forget it!
+    print(features.describe(include='all'))
+
 
 if __name__ == '__main__':
-    linear_regression_practical_example_improved(quantile_percent_upper=0.95, quantile_percent_lower=0.05)
+    linear_regression_practical_example_improved(quantile_percent_upper=0.95, quantile_percent_lower=0.05, price_attr=
+                                                 'log_price', year_attr='on')
 
 
 """

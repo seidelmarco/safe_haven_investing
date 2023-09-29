@@ -3,7 +3,7 @@ import numpy as np
 
 def matrices():
     """
-    The shape of matrixes are depicted rowsxcolumns, so a 3 by 2 matrix contains 3 rows and 2 columns
+    The shape of matrixes are depicted rows x columns, so a 3 by 2 matrix contains 3 rows and 2 columns
     :return:
     """
     s = 5
@@ -25,7 +25,7 @@ def matrices():
     try:
         print(f'Shape of s: {s.shape}')
     except AttributeError as e:
-        print('You can not print the shape of an int.')
+        print('You can not print the shape of an int./scalar')
 
     print(f'Shape of s_array: {s_array.shape}')
 
@@ -92,6 +92,68 @@ def matrix_operations():
     print(v_sum)
     v_difference = v1 - v2
     print(v_difference)
+
+    """
+    Error handling:
+    Value Error: operands could not broadcast together with shapes (2, 3) (2, 2): means
+    we are not allowed to calculate matrices with different dimensions
+    
+    Same for vectors: e. g. row-vectors: operands could not be broadcast together with shapes (5, 1) (3, )
+    
+    Exception: addition with a scalar - this works
+    """
+
+    # Transposing matrices with .T
+    A = np.array([[5, 12, 6], [-3, 0, 14]])
+    print(A)
+    print(A.T)
+
+    # Transposing vectors - only possible after reshaping the vector:
+    x = np.array([1, 2, 3])
+    print(x)
+    print(x.T)
+
+    x_reshaped = x.reshape(1, 3)
+
+    # Lifehack: reshaping also works with double-brackets; you see it after printing
+    print(x_reshaped)
+    print(x_reshaped.T)
+
+    # Dot-Product with .dot() - Multiplication:
+    # Vectors:
+    x = np.array([2, 8, -4])
+    y = np.array([1, -7, 3])
+
+    print('2*1+8*-7+-4*3 = x * y =', 2*1+8*-7+-4*3)
+    print('np.dot of x and y:', np.dot(x, y))
+
+    # Dot-Product of matrices:
+
+    # Condition: we can only multiply an m x n with an n x k matrix
+    # for example: 2x3 with a 3x1 matrix
+    # if we don't match this condition, we can transpose one matrix
+
+    a = np.array([[5, 12, 6], [-3, 0, 14]])
+    b = np.array([[2, 8, 3], [-1, 0, 0]])
+    b_shaped_manually = b.reshape(3, 2)
+    print(b_shaped_manually)
+
+    # Important: when we have a dot product, we always multiply a row vector times every column vector
+
+    ab_manually_row1col1 = 5*2 + 12*8 + 6*3
+    ab_manually_row1col2 = 5*-1 + 12*0 + 6*0
+    ab_manually_row2col1 = -3*2 + 0*8 +14*3
+    ab_manually_row2col2 = -3*-1 + 0*0 + 14*0
+
+    ab_manually = np.array([[[ab_manually_row1col1, ab_manually_row1col2]], [[ab_manually_row2col1, ab_manually_row2col2]]])
+    print('AB-manually:', ab_manually)
+
+    print(a.shape, b.shape)
+    b_reshaped = b.T
+    print(a.shape, b_reshaped.shape)
+
+    ab = np.dot(a, b_reshaped)
+    print(ab)
 
 
 if __name__ == '__main__':

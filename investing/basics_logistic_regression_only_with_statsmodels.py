@@ -3,9 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
-import seaborn as sns
-sns.set()
-
 """
 7 Useful Pandas Display Options You Need to Know
 """
@@ -25,7 +22,7 @@ sns.set()
 settings = {
     'max_columns': None,
     'min_rows': None,
-    'max_rows': 100,
+    'max_rows': 50,
     'precision': 2,
     'float_format': lambda x: f'{x:.3f}'
     }
@@ -469,11 +466,10 @@ def logistic_regression_credit_eligibility_including_testing():
         """)
 
 
-
 if __name__ == '__main__':
     logistic_regression_basics()
     binary_predictors()
-    #reg_log = binary_predictors()
+    reg_log = binary_predictors()
     #confusion_matrix(reg_log)
     logistic_regression_credit_eligibility_including_testing()
 

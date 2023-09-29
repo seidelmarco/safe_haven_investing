@@ -230,6 +230,9 @@ def species_segmentation_clustering():
     wine_df = load_wine(return_X_y=True, as_frame=True)
     print(wine_df)
 
+    # Another solution to access columns in dataframes:
+    print(data_solution.species)
+
 
 if __name__ == '__main__':
     market_segmentation_clustering()
