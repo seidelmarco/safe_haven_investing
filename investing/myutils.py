@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta
 import psycopg2
-from connect import connect
+from investing.connect import connect
 from sqlalchemy import create_engine, text, insert
 from investing import hidden
 

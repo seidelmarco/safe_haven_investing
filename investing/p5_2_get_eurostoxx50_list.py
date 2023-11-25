@@ -6,7 +6,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 import pickle
 
-from myutils import push_df_to_db_replace
+from investing.myutils import push_df_to_db_replace
 
 
 def save_eurostoxx50_tickers():

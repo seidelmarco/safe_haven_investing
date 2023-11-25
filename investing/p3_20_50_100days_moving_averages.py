@@ -14,7 +14,7 @@ style.use('ggplot')
 '''
 Variablen:
 '''
-start = '2022-01-01' # input('Startdatum im Format YYYY-MM-DD')
+start = '2023-01-01' # input('Startdatum im Format YYYY-MM-DD')
 end = dt.datetime.now()
 tickers = ['CMCL', 'GC=F', 'SPY', 'DE', 'CVX']
 tickers_yf = 'DE' # yfinance nutzt nur einen string - auch bei mehreren Tickern ohne Komma

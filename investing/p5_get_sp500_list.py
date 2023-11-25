@@ -53,3 +53,7 @@ def save_sp500_tickers():
 # CAUTION: don't run - it will mess up your sp500_reload=False argument and relod the list all the time
 # save_sp500_tickers()
 
+
+if __name__ == '__main__':
+    save_sp500_tickers()
+

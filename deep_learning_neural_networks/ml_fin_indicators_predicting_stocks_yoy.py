@@ -54,7 +54,8 @@ def indicators_model():
 
     Check for OLS-Assumptions...
 
-    y_ttm_hat = earnings + revenue + costs + divausschüttungsquote etc..
+    y_ttm_hat = earnings + revenue + costs + divausschüttungsquote + debts + free cash flow,dcf, um den risiko-
+     freien Zins mit reinzubringen etc..
     :return:
     """
 

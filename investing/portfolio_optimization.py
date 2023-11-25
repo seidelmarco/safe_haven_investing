@@ -107,7 +107,7 @@ class Main:
         # Let’s use the dataframe.shift() function to shift the column axis by 1 period in a positive direction
         returns = (price_data_no_na / price_data_no_na.shift(1) - 1)[
                   1:]  # das Startdatum wegslicen, wir würden dort ohne 1: NaN sehen
-        # die Shift-Formel hat den 1.11.durch den 31.10 geteilt und einen Verlust von 0,3895% ergeben
+        # die Shift-Formel hat den 1.11.durch den 31.10 geteilt und einen Verlust von 0,3895 % ergeben
         # die -1 nach der Shift-Klammer zieht einfach nur 1 ab
         # shift(1) scheint eine Zeile zurückzugehen (schiebt eine Zeile von oben auf den cursor (die aktuelle loop))
         # datetime object containing current date and time

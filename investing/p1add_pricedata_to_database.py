@@ -1,8 +1,8 @@
 import os
 import sys
-from connect import connect
-from myutils import sqlengine, sqlengine_pull_from_db, talk_to_me, timestamp, timestamp_onlyday, back_to_the_future
-from myutils import tickers_list_europe, tickers_list_africa
+from investing.connect import connect
+from investing.myutils import sqlengine, sqlengine_pull_from_db, talk_to_me, timestamp, timestamp_onlyday, back_to_the_future
+from investing.myutils import tickers_list_europe, tickers_list_africa
 import pickle
 
 import datetime as dt
@@ -16,8 +16,8 @@ import pandas_datareader.data as pdr
 
 from tqdm import tqdm
 
-from p5_get_sp500_list import save_sp500_tickers
-from p5_2_get_eurostoxx50_list import save_eurostoxx50_tickers
+from investing.p5_get_sp500_list import save_sp500_tickers
+from investing.p5_2_get_eurostoxx50_list import save_eurostoxx50_tickers
 
 import yfinance as yf
 yf.pdr_override()
@@ -881,7 +881,7 @@ if __name__ == '__main__':
 
         #sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
-        #push_df_to_db(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
+        #push_df_to_db_replace(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
 
         #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
         #print(df)
@@ -916,11 +916,13 @@ if __name__ == '__main__':
 
         # push_df_to_db(dailysel, tablename='selection_ohlc')
 
-        #df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
-        #print(df)
+        df = pull_df_from_db(sql='sp500_'+ohlc_attr_input)
+        print(df.sort_values(by='Date'))
         sys.stdout.write(f'Sollte alles geklappt haben...mit..."{ohlc_attr_input}" :-)')
 
     else:
         #sys.exit('Jetzt ist aber Schluss hier!')
+        df = pull_df_from_db(sql='sp500_adjclose')
+        print(df.sort_values(by='Date'))
         sys.exit('Adesso, basta! Adesso ne ho abbastanza!')
 

@@ -9,10 +9,33 @@ BEGIN
 END $$;
 
 
-SELECT "Date", "AKAM", "NVDA", "RL", "CTRA", "DE", "XOM", "CVX", "AAPL", "MSFT",
+SELECT "ID", "Date", "AKAM", "NVDA", "RL", "CTRA", "DE", "XOM", "CVX", "AAPL", "MSFT",
 "KO", "DLTR", "JNJ", "KHC", "MKC", "TDG", "BKNG", "ATVI", "AMD", "ANSS",
 * FROM public.sp500_adjclose
 ORDER BY "Date" DESC;
+
+-- wir haben in adjclose 464 Reihen, in volume aber 465 - finde die Dublette oder extra Zeile, wahrscheinlich
+-- haben wir in adjclose mal einen Tag vergessen
+SELECT adj."Date", COUNT(*) FROM public.sp500_adjclose AS adj
+RIGHT JOIN public.sp500_volume AS vol
+ON adj."Date" = vol."Date"
+GROUP BY adj."Date" HAVING COUNT(*) > 1
+;
+
+SELECT * FROM public.sp500_volume AS vol WHERE NOT EXISTS 
+(SELECT 1 FROM public.sp500_adjclose AS adj WHERE vol."Date" = adj."Date" )
+;
+--Resultat: in adj gibt es den 23.01.23 mit 6 Uhr! In Vol den 23.01.23 mit 0 Uhr - ist also nicht so schlimm
+-- in adj den 18.05.23 NICHT, in vol gibt es diesen Tag :-)
+-- Lösung: adjclose nochmal ziehen - ne besser nicht, weil wir einen abhängigen view haben, besser den 18.05.23 nochmal
+--ziehen
+
+--DELETE FROM public.sp500_adjclose WHERE "Date" = '2023-11-08 00:00:00';
+--DELETE FROM public.sp500_adjclose WHERE "ID" = 477;
+
+
+ALTER TABLE public.sp500_adjclose ADD COLUMN "ID" INTEGER GENERATED ALWAYS AS IDENTITY;
+
 
 
 

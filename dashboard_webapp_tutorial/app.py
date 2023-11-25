@@ -41,7 +41,7 @@ def setting_the_flask_server_and_app():
     """
 
     data = (
-        pd.read_csv('avocado.csv')
+        pd.read_csv('sourcedata/avocado.csv')
         # remove query since we use the interactive dropdowns; query u can use for rapid prototyping
         # .query("type == 'organic' and region == 'Indianapolis' and year == 2017 ")
         .assign(Date=lambda data: pd.to_datetime(data['Date'], format='%Y-%m-%d'))
@@ -49,12 +49,14 @@ def setting_the_flask_server_and_app():
     )
     regions = data["region"].sort_values().unique()
     avocado_types = data["type"].sort_values().unique()
+    print(data)
+    print(type(regions))        # result: numpy.ndarray
 
     # next dataset:
-    data_wine = (pd.read_csv('winequality-red.csv'))
+    data_wine = (pd.read_csv('sourcedata/winequality-red.csv'))
     alcohol = data_wine["quality"].sort_values().unique()
     quality = data_wine["alcohol"].sort_values().unique()
-    print(quality, alcohol)
+    #print(quality, alcohol)
 
     external_stylesheets = [
         {"href": (
@@ -266,5 +268,5 @@ def setting_the_flask_server_and_app():
 
 if __name__ == '__main__':
     app = setting_the_flask_server_and_app()
-    app.run_server(debug=True)
+    app.run(host='127.0.0.1', port='8051', debug=True)
 
