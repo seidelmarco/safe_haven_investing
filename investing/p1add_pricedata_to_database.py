@@ -41,7 +41,7 @@ def get_yahoo_sp500_ohlc(ohlc_attr: str = 'adjclose', reload_sp500=False):
     if reload_sp500 is True:
         tickers = save_sp500_tickers()
     else:
-        with open('sp500tickers.pickle', 'rb') as f:
+        with open('sp500tickers_2402.pickle', 'rb') as f:
             tickers = pickle.load(f)
             print(tickers)
 
@@ -117,7 +117,7 @@ def get_yahoo_sp500_adjclose(reload_sp500=False):
     if reload_sp500 is True:
         tickers = save_sp500_tickers()
     else:
-        with open('sp500tickers.pickle', 'rb') as f:
+        with open('sp500tickers_2402.pickle', 'rb') as f:
             tickers = pickle.load(f)
             print(tickers)
 
@@ -184,8 +184,19 @@ def get_sp500_ohlc_today(ohlc_attr: str = 'adjclose', reload_sp500=False):
     if reload_sp500 is True:
         tickers = save_sp500_tickers()
     else:
-        with open('sp500tickers.pickle', 'rb') as f:
+        """
+        For testing:
+        It does not matter, if we change our tickers list and how this list is ordered.
+        SQLalchemy will create an INSERT INTO (... unordered tickers ....) and now VALUES ( ... in this beforementioned
+        unordered order ;-)....)
+        It only matters, that all columns of the tickers are available in the table.
+        tickers = ['JBL', 'BLDR', 'UBER']
+        2024-02-27 20:38:14,716 INFO sqlalchemy.engine.Engine INSERT INTO sp500_adjclose ("Date", "JBL", "BLDR", "UBER") VALUES (%(Date__0)s, %(JBL__0)s, %(BLDR__0)s, %(UBER__0)s), (%(D
+        """
+        with open('C:/Users/M.Seidel/PycharmProjects/safe_haven_investing/investing/sp500tickers_2402.pickle', 'rb') as f:
             tickers = pickle.load(f)
+            # für den Notfall:
+            # tickers = tickers + ['JBL', 'BLDR', 'UBER', 'BX', 'KVUE', 'COR', 'BG', 'EG', 'FI', 'RVTY', 'ATSK', 'FICO', 'PODD', 'VLTO']
             print(tickers)
 
     if not os.path.exists('sp500_dfs'):
@@ -755,6 +766,7 @@ def get_yahoo_ohlc_commodities():
     :param enddate:
     :return: main_df
     """
+    # Gold, Platinum, Copper, Crude Oil
     tickers = ['GC=F', 'PL=F', 'HG=F', 'CL=F']
     print(tickers)
 
@@ -841,7 +853,7 @@ def push_df_to_db_replace(df, tablename: str):
     df.to_sql(tablename, con=engine, if_exists='replace', chunksize=100)
 
 
-def pull_df_from_db(sql='sp500_adjclose'):
+def pull_df_from_db(sql='sp500_adjclose', dates_as_index=False):
     """
     # Todo : Funktion umschreiben, dass ich aus allen Tabellen und ausgewählte Spalten beim callen wählen kann
     :sql: default is table 'sp500_adjclose' - you can pass any table from the db as argument
@@ -853,7 +865,10 @@ def pull_df_from_db(sql='sp500_adjclose'):
     # an extra integer-index-column is added
     # df = pd.read_sql(sql, con=engine)
     # Column 'Date' is used as index
-    df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], )
+    if dates_as_index is True:
+        df = pd.read_sql(sql, con=engine, index_col='Date', parse_dates=['Date'], )
+    else:
+        df = pd.read_sql(sql, con=engine)
     '''
     #columns=['CMCL_Adj_Close',
                                                                                       # 'MTNOY_Adj_Close',
@@ -879,6 +894,10 @@ if __name__ == '__main__':
         #africa = get_ohlc_selection_africa()
         #push_df_to_db_replace(africa, tablename='ohlc_africa')
 
+        #commodities_ohlc = get_yahoo_ohlc_commodities()
+        #push_df_to_db_replace(commodities_ohlc, tablename='commodities_ohlc')
+        #print(commodities_ohlc)
+
         #sp500_df_per_attr = get_yahoo_sp500_ohlc(ohlc_attr=ohlc_attr_input, reload_sp500=False)
 
         #push_df_to_db_replace(sp500_df_per_attr, tablename='sp500_'+ohlc_attr_input)
@@ -892,9 +911,6 @@ if __name__ == '__main__':
         #df = pull_df_from_db(sql='sp500_' + ohlc_attr_input)
         #print(df)
 
-        #commodities_ohlc = get_yahoo_ohlc_commodities()
-        #push_df_to_db(commodities_ohlc, tablename='commodities_ohlc')
-        #print(commodities_ohlc)
 
         #sp500_volume = get_yahoo_sp500_ohlc()
         #print(sp500_volume)

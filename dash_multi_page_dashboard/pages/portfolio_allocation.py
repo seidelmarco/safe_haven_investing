@@ -27,7 +27,7 @@ for option, value in settings.items():
     pd.set_option(f'display.{option}', value)
 
 
-#dash.register_page(__name__, path='/portfolio', title='Portfolio Allocation', name='Portfolio Allocation')
+# dash.register_page(__name__, path='/portfolio', title='Portfolio Allocation', name='Portfolio Allocation')
 
 
 """

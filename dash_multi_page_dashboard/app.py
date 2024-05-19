@@ -18,7 +18,7 @@ app.layout = html.Div([
         html.Div(
             # an dieser Stelle loopen wir durch unsere page-registry ...wir könnten auch Zeile für Zeile die pages
             # schreiben
-            dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"])
+            dcc.Link(f"{page['name']}", href=page["relative_path"])     # - {page['path']} # not necessary to see it
         ) for page in dash.page_registry.values()
     ]),
     dash.page_container

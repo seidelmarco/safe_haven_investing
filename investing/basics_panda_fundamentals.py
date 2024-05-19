@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+import timeit
 
 # use the power of a dictionary to loop through several options at once:
 
@@ -10,7 +10,7 @@ settings = {
     'max_rows': 50,
     'precision': 4,
     'float_format': lambda x: f'{x:.2f}'
-    }
+}
 
 for option, value in settings.items():
     pd.set_option(f'display.{option}', value)
@@ -158,7 +158,6 @@ def exercises_2():
     print(area)
     print(perimeter)
 
-
     # while-loops:
     num = 0
     while num <= 29:
@@ -240,10 +239,9 @@ def exercises_2():
             money_spent += prices[i] * quantity[i]
     print(money_spent)
 
-
     # für while-loops musst du immer zuerst einen Index bestimmen:
 
-    nums = [1,35,12,24,31,51,70,100]
+    nums = [1, 35, 12, 24, 31, 51, 70, 100]
 
     index = 0
     count = 0
@@ -272,7 +270,6 @@ def pandas_dataframes():
 
     # Variant 1 - create a dictionary called data where the values should be lists. :
 
-
     data = {
         'Name': ['Amy White', 'Jack Stewart', 'Richard Lauderdale', 'Sara Johnson'],
         'Age': [50, 53, 35, 43],
@@ -298,7 +295,6 @@ def pandas_dataframes():
 
     df2 = pd.DataFrame(data=data2, index=[0, 1, 2, 3])
     print(df2)
-
 
     # Variant 3 - create a dictionary called data where the values should be pandas Series.
     # Store the pandas Series in variables named names, age, and working_experience_yrs.
@@ -326,16 +322,16 @@ def pandas_dataframes():
     # A revision to pandas DataFrames:
 
     array_a = np.array([[3, 2, 1], [6, 3, 2]])
-    #print(array_a)
+    # print(array_a)
 
     df_array_a = pd.DataFrame(array_a)
     print('DF wird angelegt - man sieht fortlaufende Indexnummern und Spaltennummern: ')
-    #print(df_array_a)
+    # print(df_array_a)
 
     df_array_a_better = pd.DataFrame(data=array_a, columns=['Column 1', 'Column 2', 'Column 3'],
                                      index=['Row 1', 'Row 2'])
     print('Verbesserter DF mit expliziten Spalten und Reihen(Index)-Namen:')
-    #print(df_array_a_better)
+    # print(df_array_a_better)
 
     df_lending = pd.read_csv('data_regressions/Lending-company.csv', index_col='LoanID')
     lending_co_data = df_lending.copy()
@@ -344,9 +340,9 @@ def pandas_dataframes():
     """
     COMMON ATTRIBUTES:
     """
-    print(lending_co_data.index) ### Index sind rows
+    print(lending_co_data.index)  ### Index sind rows
     print(lending_co_data.columns)
-    print(lending_co_data.axes) # damit sieht man Spalten und Reihen :-)
+    print(lending_co_data.axes)  # damit sieht man Spalten und Reihen :-)
 
     # G E N I A L !
     print(lending_co_data.dtypes)
@@ -439,7 +435,6 @@ def dataframe_indexing():
     # Hint: you will see the same result:
     print(lending_co_data2['Location'])
     print(lending_co_data2.loc[:, 'Location'])
-    
 
     """    
            Constructing DataFrame from a dictionary.
@@ -471,13 +466,274 @@ def dataframe_indexing():
     """
 
 
-if __name__ == '__main__':
-    #products_ret, products_categories_ret = pandas_series()
-    #print('Classic python list:', products_ret)
-    #print('Pandas series: \n', products_categories_ret)
-    #numpy_arrays()
-    #exercises_1()
-    #exercises_2()
-    pandas_dataframes()
-    #dataframe_indexing()
+from matplotlib import pyplot as plt
 
+
+def linspace():
+    """
+    # https://realpython.com/np-linspace-numpy/
+    Remember the trick to use n+1 steps for getting really evenly spaced values
+    :return: retstep= True shows the size of the step
+
+    Important: num is the number of steps NOT the size of the step like in a list
+    """
+    lin_int_array = np.linspace(0, 10, 10, dtype=np.int64, retstep=True)
+    print(lin_int_array)
+
+    linear_array = np.linspace(start=-10, stop=10, num=25)
+    print(linear_array)
+
+    # use list comprehension and range() - but it's way clumsy and inelegant :-)
+    print(list(range(1, 11)))
+
+    step = 20 / 24  # Divide the range into 24 intervals
+
+    # that's too clumsy and not intuitive:
+    comprehended_list = [-10 + step * interval for interval in range(25)]
+
+    print('Float spaces via list comprehension:\n', comprehended_list)
+
+    """
+    np.linspace vs. np.arange (numpys version of range())
+    
+    it's not just restricted to integers...
+    """
+    list_2_30_2 = list(range(2, 30, 2))
+    array_2point34 = np.arange(2.34, 31.97, 2)
+    print(f"""
+    
+        Here’s a good rule of thumb for deciding which of the two functions to use:
+
+        Use np.linspace() when the exact values for the start and end points of your range are the important 
+        attributes in your application.
+        Use np.arange() when the step size between values is more important.
+
+    
+        list_2_30_2
+        {list_2_30_2}
+        
+        vs.
+        array_2point34
+        {array_2point34}
+        with half open end interval
+    """)
+
+    """
+    For further studying - nonscalar multidimensional arrays:
+    you use axis for transposing/pivoting:
+    """
+    output = np.linspace(start=[2, 5, 9], stop=[100, 130, 160], num=10, axis=0)
+    # Todo: further testing here with the above line...
+
+    """
+    Mathematical Functions With np.linspace()
+    y_ = 4 * (x_**3) + 2 * (x_**2) + 5 * x_
+    """
+
+    """
+    ...und in diesem Moment habe ich das Konzept der Ableitungen und Steigunsraten verstanden...!
+    wenn ich nur zwei Punkte plotten lasse, dann sehe ich einen linearen Graphen mit Steigung aus -5 und 5 (der Domain)
+    um so mehr Punkte ich plotten lasse, um so kurviger wird der Graph...
+    """
+    x_ = np.linspace(-5, 5, 100)
+    y_ = 4 * (x_ ** 3) + 2 * (x_ ** 2) + 5 * x_
+
+    plt.plot(x_, y_)
+    plt.show()
+
+
+# Use numpy ... when you see the execution speed....
+
+numbers_array = np.linspace(-10, 10, 500)
+
+step = 20 / 499
+
+numbers_list = [-10 + step * interval for interval in range(500)]
+
+
+def test_np():
+    """
+    Using NumPy tools rather than core Python can yield efficiency gains in some instances.
+    In applications that require many computations on large amounts of data, this increase in efficiency
+    can be significant.
+    :return:
+    """
+    return (numbers_array + 2.5) ** 2
+
+
+def test_list():
+    return [(number + 2.5) ** 2 for number in numbers_list]
+
+
+result = list(test_np()) == test_list()
+print(result)
+
+time_np = timeit.timeit("test_np()", globals=globals(), number=100000)
+
+print('Numpy: ', time_np, 'sec')
+
+time_list = timeit.timeit("test_list()", globals=globals(), number=100000)
+
+print('List: ', time_list, 'sec')
+
+
+def window_functions(xls='C:/Users/M.Seidel/PycharmProjects/safe_haven_investing/flightdata/flightdata_kayak.xlsx'):
+    """
+    How pandas GroupBy Works
+
+    Before you get any further into the details, take a step back to look at .groupby() itself:
+
+    by_state = df.groupby("state")
+    print(by_state)
+    <pandas.core.groupby.generic.DataFrameGroupBy object at 0x107293278>
+
+    What is DataFrameGroupBy? Its .__str__() value that the print function shows doesn’t give you much
+    information about what it actually is or how it works. The reason that a DataFrameGroupBy object can be
+    difficult to wrap your head around is that it’s lazy in nature. It doesn’t really do any operations to produce a
+    useful result until you tell it to.
+
+    Note: In this tutorial, the generic term pandas GroupBy object refers to both DataFrameGroupBy and SeriesGroupBy
+    objects, which have a lot in common.
+
+    One term that’s frequently used alongside .groupby() is split-apply-combine. This refers to a chain of three steps:
+
+    Split a table into groups.
+    Apply some operations to each of those smaller tables.
+    Combine the results.
+
+    It can be difficult to inspect df.groupby("state") because it does virtually none of these things until
+    you do something with the resulting object. A pandas GroupBy object delays virtually every part of the
+    split-apply-combine process until you invoke a method on it.
+
+    So, how can you mentally separate the split, apply, and combine stages if you can’t see any of them
+    happening in isolation? One useful way to inspect a pandas GroupBy object and see the splitting in action
+    is to iterate over it:
+
+     for state, frame in by_state:
+        print(f"First 2 entries for {state!r}")
+        print("------------------------")
+        print(frame.head(2), end="\n\n")
+
+    If you’re working on a challenging aggregation problem, then iterating over the pandas GroupBy object can be a
+    great way to visualize the split part of split-apply-combine.
+
+    If you’re working on a challenging aggregation problem, then iterating over the pandas GroupBy object can be a
+    great way to visualize the split part of split-apply-combine
+
+    OR:
+    There are a few other methods and properties that let you look into the individual groups and their splits.
+    The .groups attribute will give you a dictionary of {group name: group label} pairs. For example,
+    by_state.groups is a dict with states as keys. Here’s the value for the "PA" key:
+
+    print(by_state.groups['PA'])
+
+    OR - COOL!
+
+    by_state.get_group("PA")
+
+    This is virtually equivalent to using .loc[]. You could get the same output with something
+    like df.loc[df["state"] == "PA"].
+
+    Apply-combine-step:
+    df.groupby("state")["last_name"].count()
+
+
+    :param xls:
+    :return:
+    """
+    df = pd.read_excel(xls)
+    print(df.head())
+    df_grouped = df.groupby(['Origin', 'Destination', 'Start'])['Price'].min()
+    print(df_grouped)
+
+    # Aggregate-function:
+    df_agg = df.groupby(['Origin', 'Destination']).Price.agg(['min', 'max'])
+    print(df_agg)
+    df_agg2 = df.groupby(['Origin', 'Destination']).aggregate({'Price': ['min', 'max'], 'Start': 'min'})
+    print(df_agg2)
+
+
+    # Resampling:
+    # tedious:
+    # See an easier alternative below
+    df.groupby([df.index.year, df.index.quarter])["co"].agg(["max", "min"]).rename_axis(["year", "quarter"])
+
+    """
+    This whole operation can, alternatively, be expressed through resampling. One of the uses of resampling is as a 
+    time-based groupby. All that you need to do is pass a frequency string, such as "Q" for "quarterly", 
+    and pandas will do the rest:
+    """
+    df.resample("Q")["co"].agg(["max", "min"])
+
+    # Using lambdas:
+    df.groupby("outlet", sort=False)["title"].apply(lambda ser: ser.str.contains("Fed").sum()).nlargest(10)
+
+    return df
+
+
+def pandas_as_sql():
+    """
+    Provide some examples of how various SQL-operations would be performed using Pandas.
+    :return:
+    """
+    url = "https://raw.githubusercontent.com/pandas-dev/pandas/main/pandas/tests/io/data/csv/tips.csv"
+
+    df = pd.read_csv(url)
+    print(df.head())
+
+    sorted_df = df.sort_values(('tip'), ascending=False)
+    print(sorted_df.head(10))
+
+    """
+    SELECT columns-selection
+    """
+    print(df[['total_bill', 'tip', 'time']].sort_values(by='time'))
+
+    # SELECT DISTINCT:
+    print(df[['time']].nunique())
+
+    """
+    Calculated columns
+    SELECT *, tip/total_bill AS tip_rate FROM tips;
+    """
+    df_tip_rate = df.assign(tip_rate=df['tip'] / df['total_bill'])
+    print(df_tip_rate.sort_values(by='tip_rate', ascending=False))
+
+    """
+    Row-filtering via a WHERE-clause
+    """
+    # boolean indexing:
+    df_top_tips = df_tip_rate[df_tip_rate['tip_rate'] > .2]
+    print(df_top_tips)
+
+    # ==
+    df_is_female = df_tip_rate['sex'] == 'Female'
+    print(df_is_female)
+    print(df_is_female.value_counts())
+
+    """
+    Der Trick ist, nach dem boolean indexing den originalen DF zu slicen:
+    """
+    df_female = df_tip_rate[df_is_female]
+    print(df_female)
+
+    # ???
+    # print(df_tip_rate.isin(['female']))
+
+    # .query
+    tip_rate = .2
+    print(df_tip_rate.query('tip_rate < @tip_rate'))
+
+
+if __name__ == '__main__':
+    # products_ret, products_categories_ret = pandas_series()
+    # print('Classic python list:', products_ret)
+    # print('Pandas series: \n', products_categories_ret)
+    # numpy_arrays()
+    # exercises_1()
+    # exercises_2()
+    # pandas_dataframes()
+    # dataframe_indexing()
+    window_functions()
+    # pandas_as_sql()
+    linspace()

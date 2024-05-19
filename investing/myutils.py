@@ -86,13 +86,13 @@ def talk_to_me():
 
 
 # SQLalchemy - create the engine
-def sqlengine():
+def sqlengine(echo=True, future=True):
     """
     NotImplementedError: This method is not implemented for SQLAlchemy 2.0. -> Solution: future=False
     :return:
     """
     sql_string = hidden.alchemy(hidden.secrets_safehaven())
-    engine = create_engine(sql_string, echo=True, future=True)
+    engine = create_engine(sql_string, echo=echo, future=future)
 
     with engine.connect() as con:
         con.execute(text('DROP TABLE IF EXISTS hat_geklappt;'))
@@ -110,14 +110,15 @@ def sqlengine():
     return engine
 
 
-def sqlengine_pull_from_db():
+def sqlengine_pull_from_db(echo=False, future=True):
     """
-    echo=True for debugging, but it's disturbing in do_ml()-function
+    echo=True for debugging, but it's disturbing (too much info) in do_ml()-function
     NotImplementedError: This method is not implemented for SQLAlchemy 2.0. -> Solution: future=False
     :return:
     """
     sql_string = hidden.alchemy(hidden.secrets_safehaven())
-    engine = create_engine(sql_string, echo=False, future=False)
+    # engine = create_engine(sql_string, echo=False, future=False)
+    engine = create_engine(sql_string, echo=echo, future=future)
 
     return engine
 

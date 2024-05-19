@@ -1,3 +1,7 @@
+"""
+https://pythonprogramming.net/machine-learning-stock-prices-python-programming-for-finance/?completed=/targets-for-machine-learning-labels-python-programming-for-finance/
+"""
+
 import time
 
 import bs4 as bs

@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 # use the power of a dictionary to loop through several options at once:
 
 settings = {
-    'max_columns': None,
+    'max_columns': 10,
     'min_rows': None,
-    'max_rows': 226,
+    'max_rows': 10,
     'precision': 4,
     'float_format': lambda x: f'{x:.2f}'
     }

@@ -21,14 +21,11 @@ money = FormatTemplate.money(2)
 percentage = FormatTemplate.percentage(2)
 
 # for the daily returns (third table) I use another template since we need more digits after the floating point:
-money_returns = FormatTemplate.money(5, sign='')
+money_returns = FormatTemplate.money(5)
 percentage_returns = FormatTemplate.percentage(4)
 
 # auskommentieren, wenn ich zum Testen dieses Skript solo nutzen möchte...
-dash.register_page(__name__,
-                   path='/analytics',
-                   title='Stock Analytics',
-                   name='Stock Analytics')
+dash.register_page(__name__, path='/analytics', title='Stock Analytics', name='Stock Analytics', order=2)
 
 """
 Colourpicker:
@@ -116,8 +113,12 @@ choices = df_table[['id', 'Date', 'NEM', 'MSFT', 'AAPL', 'TDG', 'CARR', 'CVX', '
 
 # columns = [{'id': c, 'name': c} for c in df.columns]
 
+columns_date = [dict(id='Date', name='Date')]
+
+# nice idea but collides with columns below-mentioned... Keep it in mind for later
+columns_money_all = [dict(id=c, name=c, type='numeric', format=money) for c in df_table.drop('Date', axis=1).columns]
+
 columns = [
-    dict(id='Date', name='Date'),
     dict(id='NEM', name='NEM', type='numeric', format=money),
     dict(id='MSFT', name='MSFT', type='numeric', format=money),
     dict(id='AAPL', name='AAPL', type='numeric', format=money),
@@ -131,7 +132,7 @@ columns = [
     dict(id='DLTR', name='DLTR', type='numeric', format=money),
     dict(id='IT', name='IT', type='numeric', format=money),
     dict(id='JNJ', name='JNJ', type='numeric', format=money),
-    dict(id='LUMN', name='LUMN', type='numeric', format=money),
+    #dict(id='LUMN', name='LUMN', type='numeric', format=money),
     dict(id='MCD', name='MCD', type='numeric', format=money),
     dict(id='MRNA', name='MRNA', type='numeric', format=money),
     dict(id='NVDA', name='NVDA', type='numeric', format=money),
@@ -157,7 +158,7 @@ columns_returns = [
     dict(id='DLTR', name='DLTR', type='numeric', format=money_returns),
     dict(id='IT', name='IT', type='numeric', format=money_returns),
     dict(id='JNJ', name='JNJ', type='numeric', format=money_returns),
-    dict(id='LUMN', name='LUMN', type='numeric', format=money_returns),
+    #dict(id='LUMN', name='LUMN', type='numeric', format=money_returns),
     dict(id='MCD', name='MCD', type='numeric', format=money_returns),
     dict(id='MRNA', name='MRNA', type='numeric', format=money_returns),
     dict(id='NVDA', name='NVDA', type='numeric', format=money_returns),
@@ -169,7 +170,26 @@ columns_returns = [
 
 df_vol = filtered_data_from_df()[5]
 
-df_returns_norm = normalized_returns_from_database()
+"""
+hier muss ich aufpassen, dass ich den richtigen DF pulle - irgendwas stimmt wieder mit dem Date nicht,
+ich denke ich muss es neu mit lambda applyen...
+"""
+df_returns_norm = normalized_returns_from_database()[0] # mal in der Funktion lieber ein Dict oder eine Liste als returnwert erstellen
+
+df_returns_norm.reset_index(inplace=True)
+df_returns_norm = df_returns_norm.sort_values(by='Date', ascending=False)
+
+# This is a simple way to extract the date - NICHT date() verwenden! TypeError: Series object is not callable:
+
+
+# IDIOT ;-) Date is index, so I must reset index
+
+df_returns_norm['Date'] = df_returns_norm['Date'].dt.date
+
+df_returns_norm['id'] = df_returns_norm.index
+
+df_returns_norm_choices = df_returns_norm[['id', 'Date', 'NEM', 'MSFT', 'AAPL', 'TDG', 'CARR', 'CVX', 'XOM', 'CTRA', 'COST', 'DE', 'DLTR', 'IT',
+                    'JNJ', 'MCD','MRNA', 'NVDA', 'PCAR', 'PWR', 'TRGP']]
 
 """
 
@@ -495,7 +515,7 @@ These are the priorities of style_* props, in decreasing order:
 # that's the only recipe what you have to call prior to the layout since it returns a tuple of two return-list
 # below-mentioned there is only one return value allowed - we need the styles in the layout
 (styles, legend) = discrete_background_color_bins(choices, n_bins=8, cols='all')    # 'all' | ['MSFT', 'AAPL', 'IT', 'NVDA']
-(styles_returns, legend_returns) = discrete_background_color_bins(df_returns_norm, n_bins=8, cols='all')    # 'all' | ['MSFT', 'AAPL', 'IT', 'NVDA']
+(styles_returns, legend_returns) = discrete_background_color_bins(df_returns_norm_choices, n_bins=8, cols='all')    # 'all' | ['MSFT', 'AAPL', 'IT', 'NVDA']
 
 layout = dbc.Container([
     dbc.Row([
@@ -506,7 +526,7 @@ layout = dbc.Container([
                 dash_table.DataTable(data=choices.to_dict(orient='records'),
                                      # format is a dict with keys:
                                      # try this later: columns=[{'name': i, 'id': i} for i in df.columns if i != 'id'],
-                                     columns=columns,        # [{'name': i, 'id': i} for i in choices], # das klappt nicht wegen der Formatierung
+                                     columns=(columns_date + columns),        # [{'name': i, 'id': i} for i in choices], # das klappt nicht wegen der Formatierung (doch, wenn ich mehrere Liste in ein Tuple passe
                                      selected_columns=['CTRA'], page_size=10,
                                      sort_action='native',  # custom | native | none
                                      editable=False,
@@ -576,6 +596,14 @@ layout = dbc.Container([
                                                  'column_id': 'CTRA'
                                              },
                                              'backgroundColor': 'tomato',
+                                             'color': 'white'
+                                         },
+                                         {
+                                             'if': {
+                                                 'filter_query': '{CTRA} >= 28 && {CTRA} < 30',
+                                                 'column_id': 'CTRA'
+                                             },
+                                             'backgroundColor': '#85144b',
                                              'color': 'white'
                                          },
                                          {
@@ -807,7 +835,7 @@ layout = dbc.Container([
                          style={'float': 'right'}),
                 # for the object "legend" you find the whole html-code above-mentioned in the heatmap-function
                 html.Div(legend_returns, style={'float': 'right'}),
-                dash_table.DataTable(data=df_returns_norm.to_dict(orient='records'),
+                dash_table.DataTable(data=df_returns_norm_choices.to_dict(orient='records'),
                                      # format is a dict with keys:
                                      columns=columns_returns,        # [{'name': i, 'id': i} for i in choices], # das klappt nicht wegen der Formatierung
                                      #columns=[{'name': i, 'id': i} for i in df_returns_norm], # das klappt nicht wegen der Formatierung
@@ -846,13 +874,16 @@ layout = dbc.Container([
                                      style_header_conditional=[{
                                         'if': {'column_id': 'Date'},
                                         'textAlign': 'left', 'padding-left': '1%',
-                                     } for c in df_returns_norm.columns],
+                                     } for c in df_returns_norm_choices.columns],
                                      style_cell_conditional=[{
                                         'if': {'column_id': 'Date'},
                                         'textAlign': 'left', 'padding-left': '1%',
                                      },
                                          {
-                                          'if': {'column_id': df_returns_norm.columns[-1]},
+                                         # in the 3rd table the padding is not recognized - what went wrong with the df?
+                                             #solution: it cannot find the "ID" col - so we must make choices...
+                                         # here: .columns is the df.attribute NOT the list from above-mentioned
+                                          'if': {'column_id': df_returns_norm_choices.columns[-1]},
                                           'padding-right': '1%',
                                          }],
                                      # for striped rows use style_data and ...data_conditional:
@@ -887,7 +918,7 @@ layout = dbc.Container([
                                              'backgroundColor': 'cornflowerBlue',     # #3D9970
                                              'color': 'white'
                                         }
-                                        for i in df_returns_norm['TRGP'].nlargest(5)
+                                        for i in df_returns_norm_choices['TRGP'].nlargest(5)
                                      ]
                                      +
                                      [
@@ -900,7 +931,7 @@ layout = dbc.Container([
                                              'backgroundColor': 'lime',     # #3D9970
                                              'color': 'white'
                                         }
-                                        for i in df_returns_norm['TRGP'].nsmallest(5)
+                                        for i in df_returns_norm_choices['TRGP'].nsmallest(5)
                                      ]
                                      #+
                                      #highlight_max_row(df_returns_norm)
@@ -966,6 +997,13 @@ layout = dbc.Container([
     ])
 ])
 
+"""
+
+
+Callbacks:
+
+
+"""
 
 # Add controls to build the interaction
 @callback(
@@ -1015,3 +1053,8 @@ if __name__ == '__main__':
     print(df)
     only_one_column = filtered_data_from_df()[4]
     print(only_one_column)
+    print(f"""df_returns_norm last col is "ID" 
+              The conditional styling in 3rd table with [-1] does not recognize the passing ... fix it
+              I think it does not work - since we only display chosen columns :-) - so the ID will
+              never displayed
+        {df_returns_norm}""")

@@ -11,7 +11,8 @@ import pandas as pd
 dash.register_page(__name__,
                    path='/',
                    title='Homepage of Synkyndineo',
-                   name='Homepage of Synkyndineo')
+                   name='Homepage of Synkyndineo',
+                   order=1)
 
 
 """

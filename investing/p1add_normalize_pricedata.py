@@ -78,6 +78,8 @@ def normalize_data(df):
 
 def normalize_pricedata(df_1col) -> float:
     """
+    https://www.codecademy.com/article/normalization
+
     df on input should contain only one column with the price data (plus dataframe index)
     :param df_1col:
     :return: y will be a new column in a dataframe - we will call it 'norm' like so:

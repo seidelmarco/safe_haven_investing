@@ -4,8 +4,6 @@
 
 https://pythonprogramming.net/getting-stock-prices-python-programming-for-finance/
 
-https://pythonprogramming.net/machine-learning-stock-prices-python-programming-for-finance/?completed=/targets-for-machine-learning-labels-python-programming-for-finance/
-
 In Windows muss man so die packages installieren
 py -m pip install pandas
 """
@@ -34,19 +32,20 @@ pd.set_option("display.max.columns", None)
 '''
 Variablen:
 '''
-start = '2022-01-01' # input('Startdatum im Format YYYY-MM-DD')
+start = dt.datetime(2023, 1, 1)
 end = dt.datetime.now()
-tickers = ['CMCL', 'GC=F', 'SPY', 'DE', 'CVX']
+tickers = ['DE']
 tickers_yf = 'CMCL' # yfinance nutzt nur einen string - auch bei mehreren Tickern ohne Komma
 
 global dataframe
 
 
-def get_pricedata(symbols: list, startdate: str, enddate: dt.datetime) -> str:
+def get_pricedata():
     """
     IMPORTANT NOTE: 2024-03-03: Both Yahoo and Google have stopped their APIs, so we'll use morningstar this time:
     Tipp: am Besten für mehrere Ticker nutzen
     die Syntax entspricht dem Pandas-Datareader, die API wurde aber von yfinance overridden ("hijacked")
+    :param data_provider:
     :param symbols: strings oder Liste (oder Liste von Listen oder Liste von strings, depends on API)
     :param startdate: string, wenn wir yahoo oder yfinance als Package nehmen
     :param enddate: aufpassen, ob wir dt.datetime oder Funktion timestamp aus myutils nehmen!
@@ -56,14 +55,16 @@ def get_pricedata(symbols: list, startdate: str, enddate: dt.datetime) -> str:
     global dataframe
     try:
         # download panel data
-        dataframe = pdr.get_data_yahoo(symbols, start=startdate, end=enddate)
+        dataframe = pdr.DataReader(tickers, 'morningstar', start, end)
+        dataframe = dataframe.sort_index(ascending=False)
 
     except Exception as e:
         warnings.warn(
-            'Yahoo Finance read failed: {}, falling back to YFinance'.format(e),
+            'Morningstar read failed: {}, falling back to YFinance'.format(e),
             UserWarning)
         # fetching data for multiple tickers:
-        dataframe = yf.download(symbols, start=startdate, end=enddate)
+        dataframe = yf.download(tickers, start, end)
+        dataframe = dataframe.sort_index(ascending=False)
 
     finally:
         pass
@@ -88,7 +89,7 @@ def get_symbol_returns_from_yahoo(symbol: str, startdate=None, enddate=None):
     """
 
     try:
-        df = pdr.get_data_yahoo(symbol, start=startdate, end=enddate)
+        df = pdr.DataReader(symbol, 'morningstar', start=startdate, end=enddate)
         # was macht das pd.to_datetime??? Das funzt nicht...
         '''
         Pandas to_datetime() method helps to convert string Date time into Python Date time object.
@@ -184,18 +185,6 @@ def get_dividends(ticker):
     return divs
 
 
-def multi_tickers():
-    tickers = yf.Tickers('msft aapl de')
-
-    # access each ticker using (example)
-    info = tickers.tickers['MSFT'].info
-    history = tickers.tickers['AAPL'].history(period="1mo")
-    actions = tickers.tickers['DE'].actions
-    print(info)
-    print(history)
-    print(actions)
-
-
 def get_currency_pairs():
     """
 
@@ -243,15 +232,13 @@ def get_currency_pairs():
 
 if __name__ == '__main__':
 
-    #print(get_pricedata(tickers, startdate=start, enddate=end))
+    print(get_pricedata())
 
-    #print(get_dividends('DE'))
+    print(get_dividends('DE'))
 
-    #print(get_dividends('CTRA'))
-    # multi_tickers()
+    print(get_dividends('CTRA'))
 
-    # print(get_symbol_returns_from_yahoo('BAS.DE', startdate='2023-01-01', enddate='2023-02-13'))
 
-    get_currency_pairs()
-    push_df_to_db_replace(get_currency_pairs(), 'pricedata_curreny_pairs')
-    sys.stdout.write('Alle Währungspaare gezogen und auf Datenbank geschaufelt.')
+    #get_currency_pairs()
+    #push_df_to_db_replace(get_currency_pairs(), 'pricedata_curreny_pairs')
+    sys.stdout.write('Mit Morningstar pricedata gezogen.')

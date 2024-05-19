@@ -8,6 +8,15 @@ BEGIN
    --PERFORM pg_sleep(10);
 END $$;
 
+SELECT "ID",
+* FROM public.sp500_adjclose
+ORDER BY "Date" DESC;
+
+SELECT "ID",
+* FROM public.sp500_volume
+ORDER BY "Date" DESC;
+
+DELETE FROM sp500_volume WHERE "ID" IN (594);
 
 SELECT "ID", "Date", "AKAM", "NVDA", "RL", "CTRA", "DE", "XOM", "CVX", "AAPL", "MSFT",
 "KO", "DLTR", "JNJ", "KHC", "MKC", "TDG", "BKNG", "ATVI", "AMD", "ANSS",
@@ -111,3 +120,20 @@ from public.sp500_adjclose;
 SELECT COUNT("NVDA") FROM public.sp500_adjclose;
 --SELECT * FROM public.top_picks_10_days;
 SELECT * FROM public.top_picks_30_days;
+
+
+/*
+Add manually new columns with new sp500 constituents from time to time
+
+*/
+
+SELECT "ABNB", * FROM sp500_adjclose ORDER BY 2 DESC;
+
+DELETE FROM sp500_adjclose WHERE "ID" IN (598);
+
+ALTER TABLE public.sp500_adjclose ADD COLUMN "PANW" FLOAT;
+ALTER TABLE public.sp500_volume ADD COLUMN "PANW" FLOAT;
+ALTER TABLE public.sp500_open ADD COLUMN "PANW" FLOAT;
+ALTER TABLE public.sp500_high ADD COLUMN "PANW" FLOAT;
+ALTER TABLE public.sp500_low ADD COLUMN "PANW" FLOAT;
+ALTER TABLE public.sp500_close ADD COLUMN "PANW" FLOAT;

@@ -7,7 +7,7 @@ import pandas as pd
 dash.register_page(__name__,
                    path='/archive',
                    redirect_from=["/archive-2022", "/archive-2021"],
-                   order=2)
+                   order=6)
 
 # All CSS-Bootstrap-grid-system classes can be assigned to the html.Div([]) elements, within their className property.
 

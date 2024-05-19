@@ -15,6 +15,10 @@ from datetime import datetime
 from myutils import timestamp
 import hidden
 
+import pickle
+
+from investing.p1add_pricedata_to_database import pull_df_from_db
+
 # pd.set_option("display.max.columns", None)
 
 # Import the file with the tickers and clean it:
@@ -30,6 +34,12 @@ def get_current_tickerlist_sp500():
     tickers = pd.read_excel('sp500ratings.xlsx')
     tickers.set_index('Symbol', inplace=True)
     print(tickers)
+
+    with open('data/sp500tickers_test.pickle', 'rb') as current_pickle:
+        sp500_list_current = pickle.load(current_pickle)
+
+    print(sp500_list_current)
+
 
     # Convert credit ratings into categorical data and order them
 
