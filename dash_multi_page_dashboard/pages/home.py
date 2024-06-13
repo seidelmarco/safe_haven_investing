@@ -102,6 +102,27 @@ def layout():
                         ], width=5),
                         dbc.Col([], width=1),
                     ]),
+            dbc.Row([
+                dbc.Col([], width=1),
+                dbc.Col([
+                    html.H3(children='Homepage: Ideas, notions, news...',
+                            style={'textAlign': 'center'}),
+                    html.Br(),
+                    html.Hr(),
+                    html.Div(
+                        'Curriculum CFA, Ethics, GIPS, Time value of money: interest rates...'
+                    ),
+                    html.Div([
+                        dcc.Markdown([
+                            '- Ethics \n', '- GIPS \n', '- Time value of money: interest rates... \n'
+                        ]),
+                        dcc.Checklist(options=['Curriculum CFA, Ethics, GIPS, Time value of money: interest rates...']),
+                    ]),
+                    html.Br(),
+                    html.Hr(),
+                ], width=10),
+                dbc.Col([], width=1),
+        ]),
                     ])
 
     return layout_home

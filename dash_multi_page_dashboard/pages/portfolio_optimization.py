@@ -2,12 +2,14 @@ import dash
 
 import dash_bootstrap_components as dbc
 from dash import html, dcc, callback, Input, Output, dash_table, State
-
-import plotly.express as px
+import dash_ag_grid as dag
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
+import plotly.express as px
+import plotly.graph_objects as go
 
 import yfinance as yf
 
@@ -19,6 +21,12 @@ from investing.p5_get_sp500_list import save_sp500_tickers
 from investing.p1add_pricedata_to_database import push_df_to_db_append, pull_df_from_db, push_df_to_db_replace
 
 import dash_multi_page_dashboard.preps_and_tests.unittest_portfolio_balancing_montecarlosim as montecarlo
+
+from dash_multi_page_dashboard.preps_and_tests.unittest_portfolio_balancing_montecarlosim import lineplot_daily_returns_pctchange as line
+from dash_multi_page_dashboard.preps_and_tests.unittest_portfolio_balancing_montecarlosim import scatter_plot_ret_vol_sr as scat
+from dash_multi_page_dashboard.preps_and_tests.unittest_portfolio_balancing_montecarlosim import bar_plot_sr_all_brackets as brack
+from dash_multi_page_dashboard.preps_and_tests.unittest_portfolio_balancing_montecarlosim import barplot_all_sectors_subindustries as bar
+
 
 import pickle
 
@@ -244,12 +252,42 @@ df_columns = [
     {'id': 'input2', 'name': 'input2', 'type': 'text'},
 ]
 
+
+columnDefs_sectors = [
+    {"field": "Symbol", "sortable": True},
+    {"field": "security", "sortable": True},
+    {"field": "sectors", "sortable": True},#Sector
+    {"field": "subindustries", "sortable": True},
+    {"field": "LT-Rating_orig", "sortable": True},
+]
+
 ####################################################################################################
 # 000 - IMPORT DATA
 
 # from the unittest...
 ####################################################################################################
 
+# replace == in Dash with Dropdown:
+df_single_sector_energy = montecarlo.df_all_sectors[montecarlo.df_all_sectors['sectors'] == 'Energy']
+
+df_single_sector_subindustries_grouped = df_single_sector_energy.groupby(['subindustries'], observed=True,
+                                                                             as_index=False).count()
+
+
+sector = 'Energy'
+subindustry = 'Integrated Oil & Gas'
+subs_stocks_list_energy = []
+# df_single_sector_energy = df_all_sectors[df_all_sectors['sectors'] == 'Energy']
+
+df_single_sec_energy = montecarlo.df_all_sectors[(montecarlo.df_all_sectors.sectors == 'Energy')]
+# Sort in the right order:
+df_single_sec_energy = df_single_sec_energy[['subindustries', 'security']].sort_values(by='subindustries')
+aktien_liste_energy = [a for a in df_single_sec_energy['security']]
+
+for j in df_single_sec_energy.subindustries.unique():
+    df_single_sub_energy = df_single_sec_energy[df_single_sec_energy.subindustries == j].security.values
+    df_single_sub_energy_list = df_single_sub_energy.tolist()
+    subs_stocks_list_energy.append(df_single_sub_energy_list)
 
 
 def main_calculations(rating_bracket=None, n_portfolios: int = 100):
@@ -346,6 +384,8 @@ def layout():
                   }
 
     # https://blog.finxter.com/plotly-dash-button-component/
+
+    colors_subs = ['lightsalmon', ] * len(montecarlo.df_sectors_subindustries_grouped.index)
 
     layout_opti = dbc.Container([
                      dbc.Row([
@@ -490,14 +530,29 @@ def layout():
                             html.Div('Filters by sector:'),
                             dcc.Dropdown(
                                 id='barchart_all_sectors',
-                                options=['Energy', 'Industrials'], #Todo: replace by list of 11 sectors
+                                options=montecarlo.df_sectors_grouped.index,  #['Energy', 'Industrials'], #Todo: replace by list of 11 sectors
                                 value=[''],
                                 multi=True,
                                 placeholder="Select " + 'one Sector' + " (leave blank for all)",
                                 style={'font-size': '13px', 'color': colors['slate-grey-darker'], #slate-grey-darker
                                        'white-space': 'nowrap', 'text-overflow': 'ellipsis'}
                             ),
-                            dcc.Graph(id=''),
+                            dcc.Graph(id='', figure=bar()[0]),
+                            # Under the first row, the Dash AG grid displays the data from our wine quality dataset. This grid allows
+                            # the user to play with the way data is displayed, by moving columns or increasing the numbers of
+                            # records displayed at a time.
+
+                            dag.AgGrid(
+                                id='grid-sectors',
+                                rowData=available_stocks_only_ratings.to_dict("records"),
+                                columnDefs=columnDefs_sectors,
+                                #columnDefs=[{'field': i} for i in available_stocks_only_ratings.columns],
+                                defaultColDef={'resizable': True, 'sortable': True, 'filter': True, 'minWidth': 115},
+                                columnSize='sizeToFit',
+                                style={"height": "310px"},
+                                dashGridOptions={'pagination': True, 'paginationPageSize': 40},
+                                className='ag-theme-alpine',
+                            ),
 
                         ], width=10),
                         dbc.Col([], width=1),
@@ -514,14 +569,15 @@ def layout():
                             html.Div('Filters by Subindustry:'),
                             dcc.Dropdown(
                                 id='barchart_all_subindustries',
-                                options=['Transport', 'Apparel'],  # Todo: replace by list of all subindustries
+                                options=montecarlo.df_sectors_subindustries_grouped['subindustries'].values   ,#['Transport', 'Apparel'],  # Todo: replace by list of all subindustries
                                 value=[''],
                                 multi=True,
                                 placeholder="Select " + 'one subindustry' + " (leave blank for all)",
                                 style={'font-size': '13px', 'color': colors['slate-grey-darker'],  # slate-grey-darker
                                        'white-space': 'nowrap', 'text-overflow': 'ellipsis'}
                             ),
-                            dcc.Graph(id=''),
+                            dcc.Graph(id='', figure=go.Figure(data=[go.Bar(x=montecarlo.df_sectors_subindustries_grouped['subindustries'].values,
+                                                                           y=montecarlo.df_sectors_subindustries_grouped.Symbol, marker_color=colors_subs)])),
 
                         ], width=10),
                         dbc.Col([], width=1),
@@ -535,18 +591,29 @@ def layout():
                                 'Barchart aller Subs per Sektor. \n'
                                 '\n'
                             ),
-                            html.Div('Select Subindustry:'),
+                            html.Div('Select Sector:'),
                             dcc.Dropdown(
                                 id='barchart_subs_per_sector',
-                                options=['Oil utilities', 'Oil Transport'],  # Todo: replace by list of subindustries
+                                options=montecarlo.df_sectors_grouped.index,  # Todo: replace by list of subindustries
                                 value=[''],
                                 multi=True,
                                 placeholder="Select " + 'Subindustry' + " (leave blank for all)",
                                 style={'font-size': '13px', 'color': colors['slate-grey-darker'],  # slate-grey-darker
                                        'white-space': 'nowrap', 'text-overflow': 'ellipsis'}
                             ),
-                            dcc.Graph(id=''),
+                            dcc.Graph(id='',
 
+                                      figure=go.Figure(data=[
+                                          go.Bar(x=df_single_sector_subindustries_grouped.subindustries,
+                                                 y=df_single_sector_subindustries_grouped.Symbol,
+                                                 hovertext=subs_stocks_list_energy,
+                                                 marker_color=colors_subs,
+                                                 showlegend=False,
+                                                 name='Subs')]),
+
+
+
+                                      ),
                         ], width=10),
                         dbc.Col([], width=1),
                     ]),
@@ -569,7 +636,9 @@ def layout():
                                 style={'font-size': '13px', 'color': colors['slate-grey-darker'],  # slate-grey-darker
                                        'white-space': 'nowrap', 'text-overflow': 'ellipsis'}
                             ),
-                            dcc.Graph(id=''),
+                            dcc.Graph(id='',
+                                      figure=brack()
+                                      ),
 
                         ], width=10),
                         dbc.Col([], width=1),
@@ -583,7 +652,7 @@ def layout():
                                 'Linechart aller gewählten returns \n'
                                 '\n'
                             ),
-                            dcc.Graph(id=''),
+                            dcc.Graph(id='', figure=line()),
 
                         ], width=10),
                         dbc.Col([], width=1),
@@ -597,7 +666,7 @@ def layout():
                                     'Scatterplot Monte-Carlo-Simulation mit Effizienzlinie. \n'
                                     '\n'
                                 ),
-                                dcc.Graph(id=''),
+                                dcc.Graph(id='', figure=scat()),
 
                             ], width=10),
                             dbc.Col([], width=1),
@@ -607,35 +676,32 @@ def layout():
     return layout_opti
 
 
-
-
-
-
-
-
-
-
-
-
 """
-Callback: Darstellung der Rating-Gruppen und tägliche Returns
+Callback: Darstellung der Sektoren - Auswahl je Sektor
 
-erst einmal in einem Skript außerhalb üben .... (wo? insert here)
 und dann alles in die Funktion dieses callbacks einfügen, sodass ich die 
 Berechnungen mit intervals und n_clicks über buttons "calculate" steuern kann...
 """
-#@callback(
-
-#)
-#def daily_returns():
-    #"""
-
-    #:return:
-    #"""
-    #return None
 
 
-print(montecarlo.df_all_sectors)
+@callback(
+    Output(component_id='grid-sectors_graph', component_property='figure'),
+    Input(component_id='grid-sectors', component_property='virtualRowData')
+)
+def grid_sectors(vdata):
+    if vdata:
+        dff = pd.DataFrame(vdata)
+        print(dff)
+        figure = go.Figure(data=[go.Bar(x=dff)])
+        figure.show()
+        return figure
+    else:
+        figure = go.Figure(data=go.Bar(x=available_stocks_only_ratings.sectors))
+        figure.show()
+        return figure
+
+
+#print(montecarlo.df_all_sectors)
 
 
 if __name__ == '__main__':

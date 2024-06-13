@@ -910,7 +910,7 @@ def scatter_plot_ret_vol_sr():
 
     :return:
     """
-    figure = go.Figure(data=go.Scatter(x=vol_arr, y=ret_arr, mode='markers',
+    figure_scat = go.Figure(data=go.Scatter(x=vol_arr, y=ret_arr, mode='markers',
                                        marker=dict(
                                            size=12,
                                            color=sharpe_arr,
@@ -934,11 +934,11 @@ def scatter_plot_ret_vol_sr():
     Efficient frontier connects those portfolios which offer the highest expected return for a
     specified level of risk. Portfolios below that line are considered to be sub-optimal.
     """
-    figure.add_trace(go.Scatter(x=frontier_volatility, y=frontier_y, mode='lines+markers', name='',
+    figure_scat.add_trace(go.Scatter(x=frontier_volatility, y=frontier_y, mode='lines+markers', name='',
                                 marker_color='darkorange'))
 
     # Add red dot for max Sharpe Ratio
-    figure.add_trace(go.Scatter(x=[max_sr_vol], y=[max_sr_ret],
+    figure_scat.add_trace(go.Scatter(x=[max_sr_vol], y=[max_sr_ret],
                                 mode='markers',
                                 marker=dict(
                                     size=16,
@@ -947,7 +947,7 @@ def scatter_plot_ret_vol_sr():
                                     line_width=.5
                                 )))
 
-    figure.update_layout(
+    figure_scat.update_layout(
         font={
                 'family': 'Rockwell',
                 'size': 20
@@ -967,9 +967,10 @@ def scatter_plot_ret_vol_sr():
             }
     )
 
-    figure.update_xaxes(title_text='Volatility of the portfolios')
-    figure.update_yaxes(title_text='Return of the portfolios')
-    figure.show()
+    figure_scat.update_xaxes(title_text='Volatility of the portfolios')
+    figure_scat.update_yaxes(title_text='Return of the portfolios')
+    figure_scat.show()
+    return figure_scat
 
 
 def lineplot_daily_returns_pctchange():
@@ -997,6 +998,7 @@ def lineplot_daily_returns_pctchange():
                         )
     figure.update_yaxes(title='Daily normalized returns')
     figure.show()
+    return figure
 
 
 def bar_plot_sr_all_brackets():
@@ -1007,16 +1009,17 @@ def bar_plot_sr_all_brackets():
     colors = ['dodgerblue', ] * 7
     i = df_all_max_sr.values[0].argmax()
     colors[i] = 'firebrick'
-    figure = go.Figure(data=[go.Bar(x=df_all_max_sr.columns, y=df_all_max_sr.values[0],
+    figure_sr = go.Figure(data=[go.Bar(x=df_all_max_sr.columns, y=df_all_max_sr.values[0],
                                     marker_color=colors,
                                     ),
                              ])
     # figure.add_bar(x=df_all_max_sr.columns, y=df_all_max_sr.values[0])
-    figure.update_layout(bargap=.40)
-    figure.update_xaxes(title='Long Term Issuer Credit Rating')
-    figure.update_yaxes(title='Max Sharpe Ratio')
+    figure_sr.update_layout(bargap=.40)
+    figure_sr.update_xaxes(title='Long Term Issuer Credit Rating')
+    figure_sr.update_yaxes(title='Max Sharpe Ratio')
 
-    figure.show()
+    figure_sr.show()
+    return figure_sr
 
 
 def barplot_all_sectors_subindustries():
@@ -1026,11 +1029,11 @@ def barplot_all_sectors_subindustries():
     """
     colors = ['indianred', ] * len(df_sectors_grouped.index)
 
-    figure = go.Figure(data=[go.Bar(x=df_sectors_grouped.index, y=df_sectors_grouped.values, marker_color=colors)])
+    figure_sec = go.Figure(data=[go.Bar(x=df_sectors_grouped.index, y=df_sectors_grouped.values, marker_color=colors)])
     # figure.add_trace(go.Bar(x=df_sectors_agg.index, y=df_sectors_agg.values, name='Subindustries'))
-    figure.update_layout()
-    figure.update_xaxes(title='Fig.4: All sectors')
-    figure.update_yaxes()
+    figure_sec.update_layout()
+    figure_sec.update_xaxes(title='Fig.4: All sectors')
+    figure_sec.update_yaxes()
 
     df_sectors_subindustries_grouped = df_all_sectors.groupby(['subindustries'], observed=True,
                                                               as_index=False).count()
@@ -1187,6 +1190,7 @@ def barplot_all_sectors_subindustries():
     # df_single_sector_energy = df_all_sectors[df_all_sectors['sectors'] == 'Energy']
 
     df_single_sec_energy = df_all_sectors[(df_all_sectors.sectors == 'Energy')]
+
     # Sort in the right order:
     df_single_sec_energy = df_single_sec_energy[['subindustries', 'security']].sort_values(by='subindustries')
     aktien_liste_energy = [a for a in df_single_sec_energy['security']]
@@ -1236,9 +1240,11 @@ def barplot_all_sectors_subindustries():
                           )
     figure3.update_xaxes(title='Fig. 6: Single sector with related Subindustries')
     figure3.update_yaxes(title='Count')
-    figure.show()
+    figure_sec.show()
     figure2.show()
     figure3.show()
+
+    return figure_sec, figure2, figure3
 
 
 if __name__ == '__main__':

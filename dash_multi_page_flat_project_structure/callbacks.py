@@ -197,7 +197,7 @@ max_dt_str = str(max_dt)
 #Create L1 dropdown options
 repo_groups_l1 = sales_import[sales_fields['reporting_group_l1']].unique()
 repo_groups_l1_all_2 = [
-    {'label' : k, 'value' : k} for k in sorted(repo_groups_l1)
+    {'label': k, 'value': k} for k in sorted(repo_groups_l1)
     ]
 repo_groups_l1_all_1 = [{'label' : '(Select All)', 'value' : 'All'}]
 repo_groups_l1_all = repo_groups_l1_all_1 + repo_groups_l1_all_2
@@ -205,9 +205,9 @@ repo_groups_l1_all = repo_groups_l1_all_1 + repo_groups_l1_all_2
 #Initialise L2 dropdown options
 repo_groups_l2 = sales_import[sales_fields['reporting_group_l2']].unique()
 repo_groups_l2_all_2 = [
-    {'label' : k, 'value' : k} for k in sorted(repo_groups_l2)
+    {'label': k, 'value': k} for k in sorted(repo_groups_l2)
     ]
-repo_groups_l2_all_1 = [{'label' : '(Select All)', 'value' : 'All'}]
+repo_groups_l2_all_1 = [{'label': '(Select All)', 'value': 'All'}]
 repo_groups_l2_all = repo_groups_l2_all_1 + repo_groups_l2_all_2
 repo_groups_l1_l2 = {}
 for l1 in repo_groups_l1:
