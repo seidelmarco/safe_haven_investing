@@ -352,7 +352,7 @@ def main_calculations(rating_bracket=None, n_portfolios: int = 100):
         #-------------------------------------------------------------
             #You see the df pricedata per rating bracket WITH nans:
             #JBL hat erst wenige Tage mit Daten - aktuell löschen wir die Spalten
-            #in deren Zeitklammer nans stecken...
+            #in deren Zeitklammer nans stecken...we can fill them with .bfill()
             #{df_pricedata_per_rating_bracket.shape}
             #{df_pricedata_per_rating_bracket}
         #-------------------------------------------------------------
@@ -750,33 +750,33 @@ def main_calculations(rating_bracket=None, n_portfolios: int = 100):
 
 df_returns_per_rating_bracket, pricedata_daily_ret_log, days, symbols_list_no_nans, vol_arr, ret_arr, sharpe_arr, \
     max_sr_vol, max_sr_ret, pricedata_normed, max_sr, df_all_sectors, df_sectors_grouped, \
-    df_sectors_subindustries_grouped, df_sectors_agg = main_calculations(n_portfolios=10000)
+    df_sectors_subindustries_grouped, df_sectors_agg = main_calculations(n_portfolios=1000)
 
 # ------------------------------------------------------------------------------------------------------
 
 df_returns_per_rating_bracket_A, pricedata_daily_ret_log_A, days_A, symbols_list_no_nans_A, vol_arr_A, ret_arr_A, sharpe_arr_A, \
     max_sr_vol_A, max_sr_ret_A, pricedata_normed_A, max_sr_A, df_all_sectors_A, df_sectors_grouped_A, \
-    df_sectors_subindustries_grouped_A, df_sectors_agg_A = main_calculations(n_portfolios=10000)
+    df_sectors_subindustries_grouped_A, df_sectors_agg_A = main_calculations(n_portfolios=1000)
 
 df_returns_per_rating_bracket_Amin, pricedata_daily_ret_log_Amin, days_Amin, symbols_list_no_nans_Amin, vol_arr_Amin, ret_arr_Amin, sharpe_arr_Amin, \
     max_sr_vol_Amin, max_sr_ret_Amin, pricedata_normed_Amin, max_sr_Amin, df_all_sectors_Amin, df_sectors_grouped_Amin, \
-    df_sectors_subindustries_grouped_Amin ,df_sectors_agg_Amin = main_calculations(['A-'], n_portfolios=10000)    # ['BBB-'],
+    df_sectors_subindustries_grouped_Amin ,df_sectors_agg_Amin = main_calculations(['A-'], n_portfolios=1000)    # ['BBB-'],
 
 df_returns_per_rating_bracket_3Bplus, pricedata_daily_ret_log_3Bplus, days_3Bplus, symbols_list_no_nans_3Bplus, vol_arr_3Bplus, ret_arr_3Bplus, sharpe_arr_3Bplus, \
     max_sr_vol_3Bplus, max_sr_ret_3Bplus, pricedata_normed_3Bplus, max_sr_3Bplus, df_all_sectors_3Bplus, df_sectors_grouped_3Bplus, \
-    df_sectors_subindustries_grouped_3Bplus, df_sectors_agg_3Bplus = main_calculations(['BBB+'], n_portfolios=10000)    # ['BBB-'],
+    df_sectors_subindustries_grouped_3Bplus, df_sectors_agg_3Bplus = main_calculations(['BBB+'], n_portfolios=1000)    # ['BBB-'],
 
 df_returns_per_rating_bracket_3B, pricedata_daily_ret_log_3B, days_3B, symbols_list_no_nans_3B, vol_arr_3B, ret_arr_3B, sharpe_arr_3B, \
     max_sr_vol_3B, max_sr_ret_3B, pricedata_normed_3B, max_sr_3B, df_all_sectors_3B, df_sectors_grouped_3B, \
-    df_sectors_subindustries_grouped_3B, df_sectors_agg_3B = main_calculations(['BBB'], n_portfolios=10000)    # ['BBB-'],
+    df_sectors_subindustries_grouped_3B, df_sectors_agg_3B = main_calculations(['BBB'], n_portfolios=1000)    # ['BBB-'],
 
 df_returns_per_rating_bracket_3Bmin, pricedata_daily_ret_log_3Bmin, days_3Bmin, symbols_list_no_nans_3Bmin, vol_arr_3Bmin, ret_arr_3Bmin, sharpe_arr_3Bmin, \
     max_sr_vol_3Bmin, max_sr_ret_3Bmin, pricedata_normed_3Bmin, max_sr_3Bmin, df_all_sectors_3Bmin, df_sectors_grouped_3Bmin, \
-    df_sectors_subindustries_grouped_3Bmin, df_sectors_agg_3Bmin = main_calculations(['BBB-'], n_portfolios=10000)    # ['BBB-'],
+    df_sectors_subindustries_grouped_3Bmin, df_sectors_agg_3Bmin = main_calculations(['BBB-'], n_portfolios=1000)    # ['BBB-'],
 
 df_returns_per_rating_bracket_Bmin, pricedata_daily_ret_log_Bmin, days_Bmin, symbols_list_no_nans_Bmin, vol_arr_Bmin, ret_arr_Bmin, sharpe_arr_Bmin, \
     max_sr_vol_Bmin, max_sr_ret_Bmin, pricedata_normed_Bmin, max_sr_Bmin, df_all_sectors_Bmin, df_sectors_grouped_Bmin, \
-    df_sectors_subindustries_grouped_Bmin, df_sectors_agg_Bmin = main_calculations(['BB+', 'BB', 'BB-', 'B+', 'B', 'B-'], n_portfolios=10000)    # ['BBB-'],
+    df_sectors_subindustries_grouped_Bmin, df_sectors_agg_Bmin = main_calculations(['BB+', 'BB', 'BB-', 'B+', 'B', 'B-'], n_portfolios=1000)    # ['BBB-'],
 
 d = {'Ind. Sel.': max_sr, 'AAA - A': max_sr_A, 'A-': max_sr_Amin, 'BBB+': max_sr_3Bplus, 'BBB': max_sr_3B, 'BBB-':max_sr_3Bmin, 'B-': max_sr_Bmin }
 df_all_max_sr = pd.DataFrame(data=d, index=[0])

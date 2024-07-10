@@ -81,6 +81,9 @@ def normalized_returns_from_database(table: str = 'sp500_adjclose', ticker: str 
            Todo: muss ich die NaNs nicht noch fillen oder droppen??? Ja. wir droppen bei den returns... below-mentioned
        """, prices_df)
 
+    # Todo: hier muss ich das Datum DESC sortieren!!!
+    prices_df_sortedDate = prices_df.sort_values(by='Date', ascending=False)
+
 
 
     # Normalize the data:
@@ -88,8 +91,8 @@ def normalized_returns_from_database(table: str = 'sp500_adjclose', ticker: str 
     Weil "Date" Index ist, kann ich bedenkenlos normalisieren - ID sollte ich droppen, weil es meine range zu
     sehr abweichen lässt...
     """
-    prices_df.copy()
-    log_prices_df = np.log(prices_df)
+    prices_df_sortedDate.copy()
+    log_prices_df = np.log(prices_df_sortedDate)
     #print(log_prices_df)
 
     # Step 2: Calculate daily returns of the stocks
@@ -101,9 +104,11 @@ def normalized_returns_from_database(table: str = 'sp500_adjclose', ticker: str 
     Muss ich ln oder kann ich nicht gleich mit % arbeiten....?
     Nein: wenn ich den aktuellen Tag durch den Vortag teile bekomme ich die % und die sind exakt gleich zur Differenz
     der LN-Gleichungen ;-) 
+    Edit 27.06.24: log ist besser, weil Vortag durch aktuellen Tag bringt immer etwas über oder 100% (also 1,02)
+    und dann muss man 1 abziehen.
     
     """
-    log_returns_df = np.log(prices_df) - np.log(prices_df.shift(1))
+    log_returns_df = np.log(prices_df_sortedDate) - np.log(prices_df_sortedDate.shift(1))
 
     # die nächste Zeile bewirkt irgendwas Komisches ... muss ich schon vorher die NaNs droppen?
     #normalized_returns_df.dropna(inplace=True)
@@ -114,11 +119,11 @@ def normalized_returns_from_database(table: str = 'sp500_adjclose', ticker: str 
            {log_returns_df}
        """)
 
-    pctchange_returns_df = (prices_df / prices_df.shift(1))-1
+    pctchange_returns_df = (prices_df_sortedDate / prices_df_sortedDate.shift(1))-1
     print('pctchange:', pctchange_returns_df)
 
-    print(prices_df.min().min())
-    print(prices_df.max().max())
+    print(prices_df_sortedDate.min().min())
+    print(prices_df_sortedDate.max().max())
     """
     Min-Max-Formula:
     min = 0
@@ -134,11 +139,11 @@ def normalized_returns_from_database(table: str = 'sp500_adjclose', ticker: str 
     x = 0.5 - 0 
 
     """
-    min_col = prices_df.min()
+    min_col = prices_df_sortedDate.min()
     # print(min_col)
-    min_scalar = prices_df.min().min()
+    min_scalar = prices_df_sortedDate.min().min()
     print(min_scalar)
-    max_scalar = prices_df.max().max()
+    max_scalar = prices_df_sortedDate.max().max()
     print(max_scalar)
 
     any_price = 2400
@@ -148,7 +153,7 @@ def normalized_returns_from_database(table: str = 'sp500_adjclose', ticker: str 
     print(f'minmax_percent: {minmax_percent}%, minmax_ratio: {minmax_ratio}')
 
     # x ist eine series/ 1 col:
-    x = prices_df['MMM']
+    x = prices_df_sortedDate['MMM']
     # time series normalization part
     minmax_returns_df = (x - min_scalar) / (max_scalar - min_scalar)
     minmax_returns_df.sort_index(ascending=False, inplace=True)

@@ -394,6 +394,7 @@ def l2dropdown_options(l1_dropdown_value):
 # 002 - RECAP TABLE
 ####################################################################################################
 
+
 @app.callback(
     [Output('recap-table', 'data'), Output('recap-table', 'columns'), Output('recap-table', 'style_data_conditional')],
 	[Input('date-picker-sales', 'start_date'),

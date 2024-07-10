@@ -25,7 +25,7 @@ money_returns = FormatTemplate.money(5)
 percentage_returns = FormatTemplate.percentage(4)
 
 # auskommentieren, wenn ich zum Testen dieses Skript solo nutzen möchte...
-dash.register_page(__name__, path='/analytics', title='Stock Analytics', name='Stock Analytics', order=2)
+dash.register_page(__name__, path='/analytics', title='2 - Stock Analytics', name='2 - Stock Analytics', order=2)
 
 """
 Colourpicker:
@@ -174,6 +174,9 @@ df_vol = filtered_data_from_df()[5]
 hier muss ich aufpassen, dass ich den richtigen DF pulle - irgendwas stimmt wieder mit dem Date nicht,
 ich denke ich muss es neu mit lambda applyen...
 """
+
+# Todo: ich denke, ich sollte lieber mit log-returns arbeiten ... hier berechnen, anstatt importieren...
+# Todo: jetzt stimmen die Summen, aber das Vorzeichen stimmt nicht...
 df_returns_norm = normalized_returns_from_database()[0] # mal in der Funktion lieber ein Dict oder eine Liste als returnwert erstellen
 
 df_returns_norm.reset_index(inplace=True)
@@ -831,7 +834,8 @@ layout = dbc.Container([
         html.Br(),
         dbc.Col([], width=1),
         dbc.Col([
-                html.Pre(children='Testing conditional formatting like percentages in the scope of a returns table...',
+                html.Pre(children='Testing conditional formatting like percentages in the scope of a returns table...\n'
+                                  'hier stimmt aber irgendwas mit den returns nicht TODO!',
                          style={'float': 'right'}),
                 # for the object "legend" you find the whole html-code above-mentioned in the heatmap-function
                 html.Div(legend_returns, style={'float': 'right'}),
@@ -1058,3 +1062,6 @@ if __name__ == '__main__':
               I think it does not work - since we only display chosen columns :-) - so the ID will
               never displayed
         {df_returns_norm}""")
+    df_returns_norm_test = normalized_returns_from_database()[0]
+    df_returns_norm_test_TRGP = df_returns_norm_test['TRGP']
+    print(df_returns_norm_test_TRGP)

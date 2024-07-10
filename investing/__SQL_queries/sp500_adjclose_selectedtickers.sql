@@ -16,7 +16,7 @@ SELECT "ID",
 * FROM public.sp500_volume
 ORDER BY "Date" DESC;
 
-DELETE FROM sp500_volume WHERE "ID" IN (594);
+DELETE FROM sp500_volume WHERE "ID" IN (638);
 
 SELECT "ID", "Date", "AKAM", "NVDA", "RL", "CTRA", "DE", "XOM", "CVX", "AAPL", "MSFT",
 "KO", "DLTR", "JNJ", "KHC", "MKC", "TDG", "BKNG", "ATVI", "AMD", "ANSS",

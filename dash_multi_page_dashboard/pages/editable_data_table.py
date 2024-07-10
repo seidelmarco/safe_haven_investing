@@ -32,7 +32,7 @@ from investing.myutils import connect, sqlengine, sqlengine_pull_from_db, talk_t
 timestamp = dt.datetime.now()
 
 
-dash.register_page(__name__, path='/editable', title='Editable Table', name='Editable Table', order=5)
+dash.register_page(__name__, path='/editable', title='5-Editable Table', name='5 - Editable Table', order=5)
 
 
 params = [

@@ -19,10 +19,13 @@ from investing.myutils import connect, sqlengine, sqlengine_pull_from_db
 from investing.p5_get_sp500_list import save_sp500_tickers
 from investing.p1add_pricedata_to_database import push_df_to_db_append, pull_df_from_db, push_df_to_db_replace
 
+from dash.dash_table import FormatTemplate
+money = FormatTemplate.money(2)
+
 # use the power of a dictionary to loop through several options at once:
 
 settings = {
-    'max_columns': None,
+    'max_columns': 10,
     'min_rows': None,
     'max_rows': 10,
     'precision': 6,
@@ -34,8 +37,8 @@ for option, value in settings.items():
 
 currentdatetime = dt.datetime.now()
 
-dash.register_page(__name__, path='/sector_allocation', title='Portfolio Allocation by Sectors and Subindustries',
-                   name='Sector Allocation', order=7)
+dash.register_page(__name__, path='/sector_allocation', title='7 - Portfolio Allocation by Sectors and Subindustries',
+                   name='7 - Sector Allocation', order=7)
 
 
 """
@@ -193,7 +196,14 @@ def main_calculations():
     df_pricedata_complete_aggrid = df_pricedata_complete.reset_index().set_index('ID')\
         .sort_values(by='Date', ascending=False)
 
-    #df_pricedata_complete_aggrid = df_pricedata_complete_aggrid.sort_values(by='Date', ascending=False)
+    """
+    
+    """
+    # Create dropdown options all Symbols
+    symbols_unique = df_all_sectors['Symbol'].unique()
+    symbol_options_dpdn = [
+        {'label': k, 'value': k} for k in sorted(symbols_unique)
+    ]
 
     return_dictionary = {'df_all_sectors': df_all_sectors,
                          'df_sectors_grouped': df_sectors_grouped,
@@ -201,6 +211,7 @@ def main_calculations():
                          'df_pricedata_complete': df_pricedata_complete,
                          'df_tickers_rating': df_tickers_rating,
                          'df_pricedata_complete_aggrid': df_pricedata_complete_aggrid,
+                         'symbol_options_dpdn': symbol_options_dpdn,
                          }
 
     # return df_all_sectors, df_sectors_grouped, df_sectors_subindustries_grouped, \
@@ -317,18 +328,60 @@ def layout():
                             dcc.Graph(id='barchart-secs'),
                             html.Hr(),
                             html.Br(),
-                            dag.AgGrid(
+
+
+
+
+
+                            dcc.Dropdown(id='symbols-dpdn',
+                                         # Create dropdown options all Symbols
+                                         options=[{'label': k, 'value': k} for k in sorted(return_dict['df_all_sectors']['Symbol'].unique())],
+                                         value=['CAT'],
+                                         multi=True,
+                                         placeholder="Select ticker-symbol (leave blank for all)",
+                                         ),
+                            dash_table.DataTable(
                                 id='grid-pricedata-filtered',
-                                rowData=return_dict['df_pricedata_complete_aggrid'].to_dict("records"),
-
-                                columnDefs=[{'field': i} for i in return_dict['df_pricedata_complete_aggrid'].columns],
-
-                                defaultColDef={'resizable': True, 'sortable': True, 'filter': True, 'minWidth': 115},
-                                columnSize='sizeToFit',
-                                style={"height": "310px"},
-                                dashGridOptions={'pagination': True, 'paginationPageSize': 40},
-                                className='ag-theme-alpine-dark',
+                                page_size=15,
+                                style_table={'width': '100%', 'overflowX': 'auto'},
+                                style_header={
+                                    'backgroundColor': 'transparent',
+                                    'fontFamily': 'Arial',
+                                    'font-size': '1rem',
+                                    'color': colors['darkgoldenrod'],
+                                    'border': '0px transparent',
+                                    'textAlign': 'center'},
+                                style_cell={
+                                    'height': 'auto',
+                                    # all three widths are needed
+                                    'minWidth': '100px', 'width': '120px', 'maxWidth': '150px',
+                                    'whiteSpace': 'normal',
+                                    'backgroundColor': 'transparent',
+                                    'fontFamily': 'Arial',
+                                    'font-size': '0.85rem',
+                                    'color': colors['white'],
+                                    'border': '0px transparent',
+                                    'textAlign': 'center'},
+                                style_data={
+                                    'color': colors['invertiert'],
+                                    'backgroundColor': 'transparent',
+                                    'border': '1px solid #a3998e',
+                                },
+                                cell_selectable=True,
+                                column_selectable='multi',
                             ),
+                            # dag.AgGrid(
+                            #     id='grid-pricedata-filtered',
+                            #     # rowData=return_dict['df_pricedata_complete_aggrid'].to_dict("records"),
+                            #
+                            #     # columnDefs=[{'field': i} for i in return_dict['df_pricedata_complete_aggrid'].columns],
+                            #
+                            #     defaultColDef={'resizable': True, 'sortable': True, 'filter': True, 'minWidth': 115},
+                            #     columnSize='sizeToFit',
+                            #     style={"height": "310px"},
+                            #     dashGridOptions={'pagination': True, 'paginationPageSize': 40},
+                            #     className='ag-theme-alpine-dark',
+                            # ),
                             html.Br(),
                             dcc.Graph(id='pricedata-ind'),
                             html.Hr(),
@@ -344,31 +397,31 @@ def layout():
                             #     + [html.Div(id='out-all-types')]
                             # ),
                             html.Br(),
-                            html.Div(
-                                # debouncing delays the proces of triggering the callback until you hit tab or enter...
-                                [dcc.Input(id='input-stock1', type='text', value='AAPL', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock2', type='text', value='TDG', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock3', type='text', value='MSFT', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock4', type='search', value='PCAR', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock5', type='search', value='NVDA', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock6', type='search', value='CTRA', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock7', type='search', value='DE', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock8', type='search', value='MRNA', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock9', type='search', value='TRGP', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 dcc.Input(id='input-stock10', type='search', value='COST', placeholder='e.g. TDG',
-                                           debounce=True, autoComplete='on', list='symbols'),
-                                 ]
-                                + [html.Div(id='out-all-stocks')]
-                            ),
+                            # html.Div(
+                            #     # debouncing delays the proces of triggering the callback until you hit tab or enter...
+                            #     [dcc.Input(id='input-stock1', type='text', value='AAPL', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock2', type='text', value='TDG', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock3', type='text', value='MSFT', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock4', type='search', value='PCAR', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock5', type='search', value='NVDA', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock6', type='search', value='CTRA', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock7', type='search', value='DE', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock8', type='search', value='MRNA', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock9', type='search', value='TRGP', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      dcc.Input(id='input-stock10', type='search', value='COST', placeholder='e.g. TDG',
+                            #                debounce=True, autoComplete='on', list='symbols'),
+                            #      ]
+                            #     + [html.Div(id='out-all-stocks')]
+                            # ),
                             html.Br(),
                             html.Datalist(id='symbols', children=[
                                 html.Option(value='AWK'),
@@ -382,34 +435,60 @@ def layout():
                                 html.Option(value='WMT'),
                                 html.Option(value='RL'),
                             ]),
-
+                            dcc.Dropdown(id='symbols-ind-dpdn',
+                                         # Create dropdown options individual Symbols
+                                         options=[{'label': k, 'value': k} for k in
+                                                  sorted(return_dict['df_all_sectors']['Symbol'].unique())],
+                                         value=['CAT', 'DE', 'TRGP', 'PCAR', 'MSFT', 'AAPL', 'TDG'],
+                                         multi=True,
+                                         placeholder="Select ticker-symbol (leave blank for all)",
+                                         ),
 
 
                             # eventuell den gesamten dag.AgGrid-Block rausnehmen und als var table
                             # unten im Callback bearbeiten, weil von dort der df kommt...
-                            dash_table.DataTable(id='table-ind-pricedata',),
-                            # dag.AgGrid(
-                            #     #
-                            #     #
-                            #     # wir brauchen nur die Id und das styling - rowData und columnDefs werden aus cb kommen
-                            #     #
-                            #     #
-                            #     #
-                            #     id='table-ind-pricedata',  # pricedata-ind-grid
-                            #     # rowData=return_dict['df_pricedata_complete_aggrid'].to_dict("records"),
-                            #
-                            #     # columnDefs=[{'field': i} for i in return_dict['df_pricedata_complete_aggrid'].columns],
-                            #
-                            #     defaultColDef={'resizable': True, 'sortable': True, 'filter': True, 'minWidth': 115},
-                            #     columnSize='sizeToFit',
-                            #     style={"height": "310px"},
-                            #     dashGridOptions={'pagination': True, 'paginationPageSize': 40},
-                            #     className='ag-theme-balham',
-                            #     # alpine is default - alpine-auto-dark ag-theme-quartz ag-theme-balham-dark
-                            # ),
+                            # dash_table.DataTable(id='table-ind-pricedata',),
+                            dag.AgGrid(
+                                #
+                                #
+                                # wir brauchen nur die Id und das styling - rowData und columnDefs werden aus cb kommen
+                                #
+                                #
+                                #
+                                id='table-ind-pricedata',  # pricedata-ind-grid
+                                rowData=return_dict['df_pricedata_complete_aggrid'].to_dict("records"),
+
+                                columnDefs=[{'field': i} for i in return_dict['df_pricedata_complete_aggrid'].columns],
+
+                                defaultColDef={'resizable': True, 'sortable': True, 'filter': True, 'minWidth': 115},
+                                columnSize='sizeToFit',
+                                style={"height": "310px"},
+                                dashGridOptions={'pagination': True, 'paginationPageSize': 40},
+                                className='ag-theme-balham',
+                                # alpine is default - alpine-auto-dark ag-theme-quartz ag-theme-balham-dark
+                            ),
                             html.Br(),
                             dcc.Graph(id='pricedata-ind-ind'),
                             html.Hr(),
+                            html.Br(),
+
+                            dag.AgGrid(
+                                #
+                                #
+                                # wir brauchen nur die Id und das styling - rowData und columnDefs werden aus cb kommen
+                                #
+                                #
+                                #
+                                id='table-prices-aggrid',
+
+
+                                defaultColDef={'resizable': True, 'sortable': True, 'filter': True, 'minWidth': 115},
+                                columnSize='sizeToFit',
+                                style={"height": "310px"},
+                                dashGridOptions={'pagination': True, 'paginationPageSize': 40},
+                                className='ag-theme-balham',
+                                # alpine is default - alpine-auto-dark ag-theme-quartz ag-theme-balham-dark
+                            ),
                             html.Br(),
 
                         ], width=10),
@@ -529,6 +608,56 @@ def grid_sectors(vdata):
         figure.update_yaxes(title='Count')
 
         return figure
+
+
+# Populate the dark pricedata-table by selected symbols from dropdown:
+@callback(
+    [Output(component_id='grid-pricedata-filtered', component_property='data'),
+     Output(component_id='grid-pricedata-filtered', component_property='columns')],
+    Input(component_id='symbols-dpdn', component_property='value'),
+    prevent_initial_call=False
+)
+def update_table_dpdn_pricedata(values):
+    print('Values es ist eine Liste mit Symbol-strings:', values)
+    dff = return_dict['df_pricedata_complete_aggrid'].copy()
+
+    # startdate = "2023-10-20"
+    # enddate = "2024-03-04"
+    timedelta = dt.datetime.now() - dt.timedelta(200)
+    startdate = timedelta.strftime('%Y-%m-%d')
+    enddate = dt.datetime.now().strftime('%Y-%m-%d')
+    dff.query('Date >= @startdate & Date <= @enddate', inplace=True)
+
+    # assign new columns to a DataFrame
+    dff = dff.assign(Date=lambda dff: pd.to_datetime(dff['Date'], format='%Y-%m-%d'))
+
+    # This is a simple way to extract the date - NICHT date() verwenden! TypeError: Series object is not callable:
+    dff['Date'] = dff['Date'].dt.date
+
+    dff_date_only = dff['Date']
+
+    dff = dff[values]
+
+    # join the date-series and the values-df:
+    dff_date_plus_values = dff.join(dff_date_only)
+
+    # print('dff--aggrid-values', dff.head())
+    # print('dff--only date', dff_date_only.head())
+    print('dff-joined', dff_date_plus_values.head())
+
+    if values:
+        data = dff_date_plus_values.to_dict("records")
+        columns = [{'id': 'Date', 'name': 'Date'}] + [{'id': i, 'name': i, 'type': 'numeric', 'format': money} for i in values]
+# Expected `object`.
+    else:
+        dfuf= return_dict['df_pricedata_complete_aggrid'].assign(Date=lambda dfuf: pd.to_datetime(dfuf['Date'], format='%Y-%m-%d'))
+        dfuf['Date'] = dfuf['Date'].dt.date
+        print('Pricedata if "else"')
+        print(dfuf.head())
+        data = dfuf.to_dict("records")
+        columns = [{'id': i, 'name': i, 'type': 'numeric', 'format': money} for i in dfuf.columns]
+
+    return data, columns
 
 
 @callback(
@@ -682,31 +811,21 @@ def cb_render(*vals):
 
 
 @callback(
-    Output(component_id='out-all-stocks', component_property='children'),   # children if it's html
     Output(component_id='pricedata-ind-ind', component_property='figure'),
-    # Output(component_id='dict_dff_pricedata_ind', component_property='options'),   #   # das ist doch sinnlos hier oder??? das müsste der output als dict des dff sein
-    Input(component_id='input-stock1', component_property='value'),
-    Input(component_id='input-stock2', component_property='value'),
-    Input(component_id='input-stock3', component_property='value'),
-    Input(component_id='input-stock4', component_property='value'),
-    Input(component_id='input-stock5', component_property='value'),
-    Input(component_id='input-stock6', component_property='value'),
-    Input(component_id='input-stock7', component_property='value'),
-    Input(component_id='input-stock8', component_property='value'),
-    Input(component_id='input-stock9', component_property='value'),
-    Input(component_id='input-stock10', component_property='value'),
+    Input(component_id='symbols-ind-dpdn', component_property='value'),
+    prevent_initial_call=False
 )
-def update_input_stocks(*vals): # *args, um Schreibarbeit zu sparen; Alternative: input1, input2, input3, input4, input5, input6, input7, input8, input9, input10
-    ind_select_list = [str(val) for val in vals if val]
+def update_input_stocks(values): # *vals *args, um Schreibarbeit zu sparen; Alternative: input1, input2, input3, input4, input5, input6, input7, input8, input9, input10
+    # ind_select_list = [str(val) for val in vals if val]
     # ind_select_list.append([str(val) for val in vals if val])
-    print("""
-    In cb1 sammle ich als Input die 10 Aktien, ich filtere damit den df pricedata
-    ich return den df als list comprehensive dict als output property 'options'
-    """, ind_select_list)
+    # print("""
+    # In cb1 sammle ich als Input die 10 Aktien, ich filtere damit den df pricedata
+    #ich return den df als list comprehensive dict als output property 'options'
+    #""", ind_select_list)
 
-    output_string = ' | '.join([str(val) for val in vals if val])  # Alternative: {input1} | {input2} | {input3} | {input4} | {input5} | {input6} | {input7} | {input8} | {input9} | {input10}
+    #output_string = ' | '.join([str(val) for val in vals if val])  # Alternative: {input1} | {input2} | {input3} | {input4} | {input5} | {input6} | {input7} | {input8} | {input9} | {input10}
 
-    df_pricedata_ind_select_ind = return_dict['df_pricedata_complete'][ind_select_list].sort_index(ascending=True)
+    df_pricedata_ind_select_ind = return_dict['df_pricedata_complete'][values].sort_index(ascending=True)
 
     timedelta = dt.datetime.now() - dt.timedelta(200)
     startdate = timedelta.strftime('%Y-%m-%d')
@@ -745,7 +864,7 @@ def update_input_stocks(*vals): # *args, um Schreibarbeit zu sparen; Alternative
     print('pricedata_normed - 1: ', df_pricedata_normed_ind)
 
     # Ab hier den pricedata-df filtern und mit den nominellen Preisen als options-dict ausgeben:
-    dff_pricedata_ind = return_dict['df_pricedata_complete'][ind_select_list].sort_index(ascending=True)
+    dff_pricedata_ind = return_dict['df_pricedata_complete'][values].sort_index(ascending=True) # ind_select_list
 
     timedelta = dt.datetime.now() - dt.timedelta(200)
     startdate = timedelta.strftime('%Y-%m-%d')
@@ -763,36 +882,61 @@ def update_input_stocks(*vals): # *args, um Schreibarbeit zu sparen; Alternative
         figure.add_trace(go.Scatter(x=df_pricedata_normed_ind.index,
                                     y=df_pricedata_normed_ind[col], name=col))
 
-    return output_string, figure #, dict_dff_pricedata_ind
+    return figure #, dict_dff_pricedata_ind output_string
 
 
-@callback(
-    [Output(component_id='table-ind-pricedata', component_property='Data'),
-     Output(component_id='table-ind-pricedata', component_property='Columns')],
-    Input(component_id='input-stock1', component_property='value'),
-    Input(component_id='input-stock2', component_property='value'),
-    Input(component_id='input-stock3', component_property='value'),
-    Input(component_id='input-stock4', component_property='value'),
-    Input(component_id='input-stock5', component_property='value'),
-    Input(component_id='input-stock6', component_property='value'),
-    Input(component_id='input-stock7', component_property='value'),
-    Input(component_id='input-stock8', component_property='value'),
-    Input(component_id='input-stock9', component_property='value'),
-    Input(component_id='input-stock10', component_property='value'),
+@callback([
+     Output(component_id='table-prices-aggrid', component_property='rowData'),
+     Output(component_id='table-prices-aggrid', component_property='columnDefs')
+    ],
+    Input(component_id='symbols-ind-dpdn', component_property='value'),
+    prevent_initial_call=False
 )
-def update_pricedata_ind_select(*values):
-    print(values)
-    ind_select_list = [str(val) for val in values if val]
-    print('iind_select_list: ', ind_select_list)
+def update_prices_aggrid(values):
+    print('Test für letzten Table - Values es ist eine Liste mit Symbol-strings:', values)
+    dff = return_dict['df_pricedata_complete_aggrid'].copy()
+
+    df_values = pd.DataFrame(values)
+    print('Df_values to get an object: ', df_values)
+
+    # startdate = "2023-10-20"
+    # enddate = "2024-03-04"
+    timedelta = dt.datetime.now() - dt.timedelta(200)
+    startdate = timedelta.strftime('%Y-%m-%d')
+    enddate = dt.datetime.now().strftime('%Y-%m-%d')
+    dff.query('Date >= @startdate & Date <= @enddate', inplace=True)
+
+    # This is a simple way to extract the date - NICHT date() verwenden! TypeError: Series object is not callable:
+    dff['Date'] = dff['Date'].dt.date
+
+    dff_date_only = dff['Date']
+
+    dff = dff[values]
+
+    # join the date-series and the values-df:
+    # dff_date_plus_values = dff.join(dff_date_only)
+    # variante concat
+    dff_date_plus_values = pd.concat([dff_date_only, dff], axis=1)
+
+    # print('dff--aggrid-values', dff.head())
+    # print('dff--only date', dff_date_only.head())
+    print('dff-joined', dff_date_plus_values.head())
+
     if values:
-        dff = return_dict['df_pricedata_complete'].columns[ind_select_list]  #.sort_index(ascending=True) oder df_pricedata_complete nehmen
-        print('Der df aus dem 2. Table: ', dff)
-        Data = dff.to_dict("records"),
-        Columns = [{'field': i} for i in dff.columns[1:]],
+        # der Fehler array/object lag am Komma hinter der nächsten Zeile - FACEPALM ;-)
+        rowData2 = dff_date_plus_values.to_dict("records")
+        columnDefs2 = [{'headerName': i, 'field': i} for i in dff_date_plus_values.columns]
+
     else:
-        rowData = return_dict['df_pricedata_complete'].to_dict("records"),
-        columnDefs = [{'field': i} for i in return_dict['df_pricedata_complete'].columns[1:]],
-    return Data, Columns
+        # bevor wir dt.date zum Abschneiden nutzen können, MÜSSEN wir erst ins Format to_datetime umwandeln!
+        dfuf = return_dict['df_pricedata_complete_aggrid'].assign(Date=lambda dfuf: pd.to_datetime(dfuf['Date'], format='%Y-%m-%d'))
+        dfuf['Date'] = dfuf['Date'].dt.date
+        print('Pricedata if "else"')
+        print(dfuf.head())
+        rowData2 = dfuf.to_dict("records")
+        columnDefs2 = [{'field': i} for i in dfuf.columns]
+
+    return rowData2, columnDefs2
 
 
 if __name__ == '__main__':

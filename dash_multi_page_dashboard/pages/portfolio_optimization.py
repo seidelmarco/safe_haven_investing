@@ -45,7 +45,15 @@ for option, value in settings.items():
 
 currentdatetime = dt.datetime.now()
 
-dash.register_page(__name__, path='/portfolio_optimization', title='Portfolio Allocation and Optimization', name='Portfolio Optimization', order=4)
+"""
+
+
+Das ist die page mit der statischen Monte-Carlo-Sim.
+
+
+"""
+
+dash.register_page(__name__, path='/portfolio_optimization', title='4 -Portfolio Allocation and Optimization', name='4 -Portfolio Optimization', order=4)
 
 
 """
@@ -315,24 +323,7 @@ def main_calculations(rating_bracket=None, n_portfolios: int = 100):
     # pull wo dates:
     df_available_stocks = pull_df_from_db_dates_or_not(sql='sp500_constituents_updated_ratings_merged',
                                                        dates_as_index=False)
-    print(f"""
-    
-        !!!!!!!!!!!!!!!!!!!!!!!
-        
-        available stocks-DF from main_calulations-function:
-        
-        {df_available_stocks}
-    
-        !!!!!!!!!!!!!!!!!!!!!!!
-    """)
-    ################
     return df_available_stocks
-
-
-
-
-
-
 
 
 
@@ -351,7 +342,7 @@ Dash-Layouts:
 
 Ich kann auch erstmal die plotly-Grafiken setzen und
 dann entscheiden, ob ich die main_calculations hier neu schreibe 
-oder aud der unittest-Datei importiere....
+oder aus der unittest-Datei importiere....
 
 
 
